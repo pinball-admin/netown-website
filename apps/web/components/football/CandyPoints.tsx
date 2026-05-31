@@ -133,7 +133,7 @@ export default function CandyPoints() {
               <div
                 key={user.rank}
                 className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                  user.name === 'You'
+                  user.nameKey === 'you'
                     ? 'bg-emerald-500/10 border border-emerald-500/30'
                     : 'bg-slate-800/40 border border-transparent hover:border-slate-700/50'
                 }`}

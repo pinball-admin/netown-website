@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
-import Link from 'next/link'
 import DynamicAdBanner from '@/components/football/DynamicAdBanner'
+import TeamNav from '@/components/football/TeamNav'
+import Translate from '@/components/football/Translate'
 
 interface PageProps {
   params: { id: string }
@@ -263,16 +264,7 @@ export default function TeamPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-[#030712] text-slate-50">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-slate-800/50">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <Link href="/football" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-sm font-medium">{t('common.backToDashboard')}</span>
-          </Link>
-        </div>
-      </nav>
+      <TeamNav />
 
       <main className="pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-6">
@@ -296,7 +288,7 @@ export default function TeamPage({ params }: PageProps) {
                       FIFA #{team.ranking}
                     </span>
                     <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full">
-                      {team.worldCupTitles} 🏆 {t('common.titles')}
+                      {team.worldCupTitles} 🏆 <Translate text="common.titles" />
                     </span>
                     <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full">
                       {team.group}
@@ -410,7 +402,7 @@ export default function TeamPage({ params }: PageProps) {
                 {/* Overall Probability */}
                 <div className="mt-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 rounded-xl p-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-300 font-medium">{t('common.overallAiConsensus')}</span>
+                    <span className="text-slate-300 font-medium"><Translate text="common.overallAiConsensus" /></span>
                     <span className="text-2xl font-extrabold text-emerald-400">
                       {Math.round(team.aiAnalysis.reduce((sum, ai) => sum + ai.winProbability, 0) / team.aiAnalysis.length)}%
                     </span>
@@ -421,15 +413,15 @@ export default function TeamPage({ params }: PageProps) {
               {/* History */}
               <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-6">
                 <h2 className="text-lg font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-4">
-                  {t('team.worldCupHistory')}
+                  <Translate text="team.worldCupHistory" />
                 </h2>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">{t('common.bestResult')}</span>
+                    <span className="text-slate-400"><Translate text="common.bestResult" /></span>
                     <span className="text-white font-medium">{team.bestResult}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">{t('common.titles')}</span>
+                    <span className="text-slate-400"><Translate text="common.titles" /></span>
                     <span className="text-amber-400 font-bold">{team.worldCupTitles} 🏆</span>
                   </div>
                 </div>

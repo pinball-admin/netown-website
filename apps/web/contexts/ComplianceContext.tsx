@@ -28,18 +28,21 @@ export function ComplianceProvider({ children }: { children: ReactNode }) {
 
   const checkRegion = async () => {
     try {
-      const response = await fetch('https://ipapi.co/json/', { timeout: 3000 })
-      if (response.ok) {
-        const data = await response.json()
-        const countryCode = data?.country_code || data?.countryCode
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000)
+      const response = await fetch('https://ipapi.co/json/', { signal: controller.signal })
+      clearTimeout(timeoutId)
+        if (response.ok) {
+          const data = await response.json()
+          const countryCode = data?.country_code || data?.countryCode
 
-        if (countryCode === 'CN' || countryCode === 'China') {
-          setRegion('CN')
-        } else {
-          setRegion('OVERSEAS')
+          if (countryCode === 'CN' || countryCode === 'China') {
+            setRegion('CN')
+          } else {
+            setRegion('OVERSEAS')
+          }
         }
-      }
-    } catch {
+      } catch {
       const browserLang = navigator.language.toLowerCase()
       if (browserLang.startsWith('zh')) {
         setRegion('CN')
