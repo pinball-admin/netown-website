@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --neon-green: #00FF66;
+  --neon-green-glow: rgba(0, 255, 102, 0.3);
+  --neon-green-dim: rgba(0, 255, 102, 0.6);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neon-green) #1a1a1a;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--neon-green), #00cc52);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-green);
+}
+
+::selection {
+  background: var(--neon-green);
+  color: #000;
+}
+
+body {
+  background-color: #000000 !important;
+  color: #e0e0e0;
+}
+
+@layer base {
+  body {
+    @apply bg-black text-slate-200;
+  }
+}
+
+@layer components {
+  .btn-cyber {
+    @apply px-4 py-2 border border-[#00FF66] text-[#00FF66] rounded-lg;
+    @apply hover:bg-[#00FF66] hover:text-black transition-all duration-200;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+  }
+
+  .btn-cyber:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.6), 0 0 40px rgba(0, 255, 102, 0.3);
+  }
+
+  .card-cyber {
+    @apply bg-[#0a0a0a] border border-[#00FF66]/30 rounded-xl;
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.1);
+  }
+
+  .text-cyber {
+    color: var(--neon-green);
+    text-shadow: 0 0 10px var(--neon-green-glow);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 20px var(--neon-green-glow), 0 0 40px rgba(0, 255, 102, 0.15);
+  }
+
+  .border-cyber {
+    border-color: var(--neon-green);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--neon-green-glow), 0 0 10px rgba(0, 255, 102, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 15px var(--neon-green-glow), 0 0 30px rgba(0, 255, 102, 0.4);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.4s ease-out forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #334155;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}
