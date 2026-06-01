@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { I18nProvider } from '@/contexts/I18nContext'
 import { ComplianceProvider } from '@/contexts/ComplianceContext'
+import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: 'Netown - Football Arena',
@@ -22,6 +23,7 @@ export default function RootLayout({
         <I18nProvider>
           <ComplianceProvider>
             {children}
+            <Footer />
           </ComplianceProvider>
         </I18nProvider>
       </body>
