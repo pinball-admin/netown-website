@@ -1,13 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import { Language, languages as languageOptions } from '@/contexts/I18nContext'
 import { useCompliance } from '@/contexts/ComplianceContext'
+import { useUser } from '@/contexts/UserContext'
 import AIExpertsSection, { ExpertStats } from '@/components/AIExpertsSection'
 import { usePrediction } from '@/contexts/PredictionContext'
 import { ExpertId } from '@/libs/types'
 import { MODULES } from '@/config/modules'
+import LoginModal from '@/components/LoginModal'
+import CandyBalance from '@/components/CandyBalance'
 
 const languageFlags: Record<Language, string> = {
   en: '🇬🇧',
@@ -21,8 +25,10 @@ const languageFlags: Record<Language, string> = {
 }
 
 export default function HomePage() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const { t, language, setLanguage } = useI18n()
   const { isPureDataMode, isWeb3Enabled } = useCompliance()
+  const { user, isLoggedIn, login, logout } = useUser()
   const { expertStats, championExpert, demotedExperts, expertRanking } = usePrediction()
 
   const isChinese = language === 'zh'
@@ -34,8 +40,12 @@ export default function HomePage() {
     statsMap[key as ExpertId] = value as ExpertStats
   })
 
+  const handleLogin = (userData: any) => {
+    login(userData)
+  }
+
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="min-h-screen bg-black relative overflow-hidden pb-16">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0a0a0a_1px,transparent_1px)] bg-[linear-gradient(to_bottom,#0a0a0a_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-40" />
       
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[700px] bg-[#00FF66]/8 rounded-full blur-[180px] pointer-events-none" />
@@ -65,7 +75,28 @@ export default function HomePage() {
                 >
                   <span className="relative z-10">Enter the Arena</span>
                 </Link>
+                
+                {!isLoggedIn && (
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="inline-flex items-center justify-center px-8 sm:px-10 py-3 sm:py-4 rounded-xl bg-slate-800 border-2 border-slate-600 text-white font-bold text-base sm:text-lg hover:bg-slate-700 transition-all duration-300"
+                  >
+                    <span className="relative z-10">Login / Register</span>
+                  </button>
+                )}
               </div>
+              
+              {isLoggedIn && (
+                <div className="mt-6 flex items-center justify-center gap-4">
+                  <CandyBalance userId={user!.id} />
+                  <button
+                    onClick={logout}
+                    className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="w-full mt-8 sm:mt-12">
@@ -80,7 +111,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="fixed top-6 right-6 z-50">
+      <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
+        {isLoggedIn && <CandyBalance userId={user!.id} />}
+        
         <div className="relative">
           <button
             onClick={() => {
@@ -97,10 +130,16 @@ export default function HomePage() {
       </div>
 
       {MODULES.worldCup2026.enabled && (
-        <div className="fixed bottom-6 left-6 z-50 text-slate-500 text-xs">
+        <div className="fixed bottom-20 left-6 z-50 text-slate-500 text-xs">
           2026 FIFA World Cup AI Prediction Platform
         </div>
       )}
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLogin={handleLogin}
+      />
     </div>
   )
 }

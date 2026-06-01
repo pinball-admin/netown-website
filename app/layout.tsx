@@ -3,7 +3,9 @@ import './globals.css'
 import { I18nProvider } from '@/contexts/I18nContext'
 import { ComplianceProvider } from '@/contexts/ComplianceContext'
 import { PredictionProvider } from '@/contexts/PredictionContext'
+import { UserProvider } from '@/contexts/UserContext'
 import Footer from '@/components/Footer'
+import ComplianceDisclaimer from '@/components/ComplianceDisclaimer'
 
 export const metadata: Metadata = {
   title: 'Netown - Football Arena',
@@ -24,8 +26,11 @@ export default function RootLayout({
         <I18nProvider>
           <ComplianceProvider>
             <PredictionProvider>
-              {children}
-              <Footer />
+              <UserProvider>
+                {children}
+                <ComplianceDisclaimer />
+                <Footer />
+              </UserProvider>
             </PredictionProvider>
           </ComplianceProvider>
         </I18nProvider>
