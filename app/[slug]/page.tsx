@@ -51,16 +51,43 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const teamId = normalizeTeamSlug(slug.replace('team-', ''))
     const team = getMockTeamStats(teamId)
     return {
-      title: `${team.name} World Cup 2026 Team Profile`,
-      description: `Complete profile of ${team.name} national football team. View squad, stats, fixtures, and AI predictions for World Cup 2026.`,
+      title: `${team.name} World Cup 2026 Team Profile | Netown Arena`,
+      description: `Looking for ${team.name} World Cup 2026 predictions? View complete team profile, squad, stats, fixtures, and AI-powered match analysis. Join Netown Arena for free candy rewards and expert predictions.`,
+      keywords: [team.name, 'World Cup 2026', 'football', 'soccer', 'team profile', 'AI predictions', 'match analysis'],
+      openGraph: {
+        title: `${team.name} World Cup 2026 Team Profile`,
+        description: `Complete profile of ${team.name} national football team with AI predictions for World Cup 2026.`,
+        type: 'website',
+        locale: 'en_US',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${team.name} World Cup 2026 Team Profile`,
+        description: `Complete profile of ${team.name} national football team with AI predictions.`,
+      },
     }
   }
   
   if (slug.startsWith('h2h-')) {
     const pair = slug.replace('h2h-', '')
+    const [home, away] = pair.split('-vs-')
+    const homeName = home?.charAt(0).toUpperCase() + home?.slice(1) || ''
+    const awayName = away?.charAt(0).toUpperCase() + away?.slice(1) || ''
     return {
-      title: `${pair.replace('-vs-', ' vs ')} H2H History & Predictions`,
-      description: `Head-to-head statistics and AI predictions for ${pair.replace('-vs-', ' vs ')}.`,
+      title: `${homeName} vs ${awayName} H2H History & AI Predictions | Netown Arena`,
+      description: `Looking for ${homeName} vs ${awayName} World Cup 2026 AI predictions? View comprehensive H2H statistics, 5 AI experts analysis, and community predictions. Join now for free candy rewards.`,
+      keywords: [`${homeName} vs ${awayName}`, 'H2H', 'head to head', 'World Cup 2026', 'AI predictions', 'match preview'],
+      openGraph: {
+        title: `${homeName} vs ${awayName} H2H History & Predictions`,
+        description: `Comprehensive H2H statistics and AI predictions for ${homeName} vs ${awayName}.`,
+        type: 'website',
+        locale: 'en_US',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${homeName} vs ${awayName} H2H & Predictions`,
+        description: `H2H statistics and AI predictions for ${homeName} vs ${awayName}.`,
+      },
     }
   }
 

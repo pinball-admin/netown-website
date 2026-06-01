@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import AIExpertsCard from '@/components/AIExpertsCard'
+import { H2HJsonLd } from '@/components/JsonLd'
 import type { TeamStats } from '@/libs/types'
 
 interface H2HPageContentProps {
@@ -33,6 +34,23 @@ export default function H2HPageContent({ homeTeam, awayTeam }: H2HPageContentPro
 
   return (
     <div className="min-h-screen bg-[#030712] text-white">
+      <H2HJsonLd
+        homeTeam={homeTeam.name}
+        awayTeam={awayTeam.name}
+        description={`Head-to-head statistics and AI predictions for ${homeTeam.name} vs ${awayTeam.name}. View comprehensive match analysis and expert predictions.`}
+        url={`https://football.netown.cn/h2h-${homeTeam.name.toLowerCase().replace(/\s+/g, '-')}-vs-${awayTeam.name.toLowerCase().replace(/\s+/g, '-')}`}
+        expertPredictions={[
+          { expertName: 'NeuralNetMaster', prediction: 'Home Win', confidence: 72 },
+          { expertName: 'StatisticalGenius', prediction: 'Draw', confidence: 45 },
+          { expertName: 'HistorianBot', prediction: 'Away Win', confidence: 38 },
+        ]}
+        communityStats={{
+          totalPredictions: 1250,
+          homeWinPercentage: 45,
+          drawPercentage: 28,
+          awayWinPercentage: 27
+        }}
+      />
       <div className="max-w-6xl mx-auto px-6 py-12">
         <nav className="mb-8">
           <Link href="/teams" className="text-slate-400 hover:text-white transition-colors">

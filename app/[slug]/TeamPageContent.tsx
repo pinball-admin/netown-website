@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import AIExpertsCard from '@/components/AIExpertsCard'
+import { TeamJsonLd } from '@/components/JsonLd'
 import type { TeamStats } from '@/libs/types'
 
 interface TeamPageContentProps {
@@ -24,6 +25,11 @@ export default function TeamPageContent({ team, teamId, relatedTeams, form, squa
 
   return (
     <div className="min-h-screen bg-[#030712] text-white">
+      <TeamJsonLd
+        name={team.name}
+        description={`${team.name} national football team profile for World Cup 2026. View squad, stats, fixtures, and AI predictions.`}
+        url={`https://football.netown.cn/team-${teamId.toLowerCase()}`}
+      />
       <div className="max-w-6xl mx-auto px-6 py-12">
         <nav className="mb-8">
           <Link href="/teams" className="text-slate-400 hover:text-white transition-colors">

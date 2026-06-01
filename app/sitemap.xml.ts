@@ -1,12 +1,15 @@
 import { TEAM_NAME_MAP } from '@/app/[slug]/teamNameMap'
+import { getTeams } from '@/libs/services/wheniskickoff'
 
 export async function GET() {
   const baseUrl = 'https://football.netown.cn'
+  const today = new Date().toISOString().split('T')[0]
   
   const teamSlugs = Object.keys(TEAM_NAME_MAP).map(key => `team-${key}`)
   
+  const teams = Object.keys(TEAM_NAME_MAP)
   const h2hCombinations: string[] = []
-  const teams = Object.keys(TEAM_NAME_MAP).slice(0, 8)
+  
   for (let i = 0; i < teams.length; i++) {
     for (let j = i + 1; j < teams.length; j++) {
       h2hCombinations.push(`h2h-${teams[i]}-vs-${teams[j]}`)
@@ -15,19 +18,20 @@ export async function GET() {
   }
 
   const pages = [
-    { path: '/', priority: 1.0 },
-    { path: '/football', priority: 0.9 },
-    { path: '/teams', priority: 0.8 },
-    { path: '/disclaimer', priority: 0.5 },
-    { path: '/privacy-policy', priority: 0.5 },
-    { path: '/terms', priority: 0.5 },
+    { path: '/', priority: 1.0, changefreq: 'daily' },
+    { path: '/football', priority: 0.9, changefreq: 'daily' },
+    { path: '/teams', priority: 0.8, changefreq: 'weekly' },
+    { path: '/disclaimer', priority: 0.5, changefreq: 'monthly' },
+    { path: '/privacy-policy', priority: 0.5, changefreq: 'monthly' },
+    { path: '/terms', priority: 0.5, changefreq: 'monthly' },
   ]
 
   const sitemapEntries = pages.map(page => 
     `<url>
       <loc>${baseUrl}${page.path}</loc>
       <priority>${page.priority}</priority>
-      <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+      <changefreq>${page.changefreq}</changefreq>
+      <lastmod>${today}</lastmod>
     </url>`
   ).join('\n')
 
@@ -35,7 +39,8 @@ export async function GET() {
     `<url>
       <loc>${baseUrl}/${slug}</loc>
       <priority>0.8</priority>
-      <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+      <changefreq>weekly</changefreq>
+      <lastmod>${today}</lastmod>
     </url>`
   ).join('\n')
 
@@ -43,7 +48,8 @@ export async function GET() {
     `<url>
       <loc>${baseUrl}/${slug}</loc>
       <priority>0.7</priority>
-      <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+      <changefreq>daily</changefreq>
+      <lastmod>${today}</lastmod>
     </url>`
   ).join('\n')
 
@@ -57,7 +63,7 @@ export async function GET() {
   return new Response(sitemap, {
     headers: {
       'Content-Type': 'application/xml',
-      'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=43200'
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
     }
   })
 }
