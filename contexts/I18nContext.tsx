@@ -258,19 +258,16 @@ const translations: Translations = {
       NIR: 'Northern Ireland',
       GRE: 'Greece',
       TUR: 'Turkey',
-      ROU: 'Romania',
+      ROM: 'Romania',
       HUN: 'Hungary',
       CZE: 'Czech Republic',
       KSA: 'Saudi Arabia',
-      CAM: 'Cameroon',
-      CRC: 'Costa Rica',
-      ISL: 'Iceland',
       JAM: 'Jamaica',
       NZL: 'New Zealand',
       PAN: 'Panama',
       PAR: 'Paraguay',
-      UAE: 'UAE',
       VEN: 'Venezuela',
+      FIN: 'Finland',
       'Group A Winner': 'Group A Winner',
       'Group A Runner-up': 'Group A Runner-up',
       'Group B Winner': 'Group B Winner',
@@ -607,19 +604,16 @@ const translations: Translations = {
       NIR: '北爱尔兰',
       GRE: '希腊',
       TUR: '土耳其',
-      ROU: '罗马尼亚',
+      ROM: '罗马尼亚',
       HUN: '匈牙利',
       CZE: '捷克',
       KSA: '沙特阿拉伯',
-      CAM: '喀麦隆',
-      CRC: '哥斯达黎加',
-      ISL: '冰岛',
       JAM: '牙买加',
       NZL: '新西兰',
       PAN: '巴拿马',
       PAR: '巴拉圭',
-      UAE: '阿联酋',
       VEN: '委内瑞拉',
+      FIN: '芬兰',
       'Group A Winner': 'A组第一',
       'Group A Runner-up': 'A组第二',
       'Group B Winner': 'B组第一',
@@ -905,7 +899,13 @@ const I18nContext = createContext<I18nContextType>({
 })
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en')
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('netown_language') as Language | null
+      return saved || 'en'
+    }
+    return 'en'
+  })
 
   const getNestedValue = (obj: Translation, path: string): string => {
     const keys = path.split('.')
@@ -919,6 +919,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
     return typeof current === 'string' ? current : path
   }
+
+  const handleSetLanguage = useCallback((lang: Language) => {
+    setLanguage(lang)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('netown_language', lang)
+    }
+  }, [])
 
   const t = useCallback((key: string): string => {
     if (!key || typeof key !== 'string') return key || ''
@@ -937,7 +944,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [t])
 
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t, tTeam, languages }}>
+    <I18nContext.Provider value={{ language, setLanguage: handleSetLanguage, t, tTeam, languages }}>
       {children}
     </I18nContext.Provider>
   )

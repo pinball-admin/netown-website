@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { I18nProvider } from '@/contexts/I18nContext'
 import { ComplianceProvider } from '@/contexts/ComplianceContext'
+import { PredictionProvider } from '@/contexts/PredictionContext'
 import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
@@ -22,8 +23,10 @@ export default function RootLayout({
       <body>
         <I18nProvider>
           <ComplianceProvider>
-            {children}
-            <Footer />
+            <PredictionProvider>
+              {children}
+              <Footer />
+            </PredictionProvider>
           </ComplianceProvider>
         </I18nProvider>
       </body>

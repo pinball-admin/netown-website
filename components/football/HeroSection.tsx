@@ -91,10 +91,10 @@ export default function HeroSection() {
             <span>{t('schedule.title')}</span>
           </a>
           <a
-            href="#teams"
+            href="/teams"
             className="px-3 sm:px-4 py-2 bg-slate-800/50 text-slate-300 border border-slate-600 rounded-lg hover:border-[#00FF66]/50 hover:text-white transition-all duration-200 text-xs sm:text-sm"
           >
-            🏟️ {t('teamMatrix.title')}
+            🏆 {t('teamsHub.viewAll')}
           </a>
         </div>
       </div>

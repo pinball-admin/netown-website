@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import { Language, languages as languageOptions } from '@/contexts/I18nContext'
 import { useCompliance } from '@/contexts/ComplianceContext'
-import AIExpertsSection from '@/components/AIExpertsSection'
+import AIExpertsSection, { ExpertStats } from '@/components/AIExpertsSection'
+import { usePrediction } from '@/contexts/PredictionContext'
+import { ExpertId } from '@/libs/types'
 
 const languageFlags: Record<Language, string> = {
   en: '🇬🇧',
@@ -20,10 +22,16 @@ const languageFlags: Record<Language, string> = {
 export default function HomePage() {
   const { t, language, setLanguage } = useI18n()
   const { isPureDataMode, isWeb3Enabled } = useCompliance()
+  const { expertStats, championExpert, demotedExperts, expertRanking } = usePrediction()
 
   const isChinese = language === 'zh'
   const brandName = t('brand.name') || 'Netown'
   const brandSlogan = t('brand.slogan') || 'Stick together, kick together.'
+
+  const statsMap: Record<ExpertId, ExpertStats> = {} as Record<ExpertId, ExpertStats>
+  Object.entries(expertStats).forEach(([key, value]) => {
+    statsMap[key as ExpertId] = value as ExpertStats
+  })
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -40,17 +48,24 @@ export default function HomePage() {
             <p className="text-[#00FF66] text-lg md:text-xl mb-10 font-medium text-cyber">
               {brandSlogan}
             </p>
-            <Link
-              href="/football"
-              className="group inline-flex items-center justify-center px-10 py-5 rounded-xl bg-[#00FF66]/10 border-2 border-[#00FF66] text-[#00FF66] font-semibold text-lg hover:bg-[#00FF66] hover:text-black transition-all duration-300 hover:scale-105 active:scale-95 glow-green"
-            >
-              <span className="relative z-10">{t('common.enterArena')}</span>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/football"
+                className="group inline-flex items-center justify-center px-10 py-4 rounded-xl bg-[#00FF66]/10 border-2 border-[#00FF66] text-[#00FF66] font-bold text-lg hover:bg-[#00FF66] hover:text-black transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-[#00FF66]/30"
+              >
+                <span className="relative z-10">Enter the Arena</span>
+              </Link>
+            </div>
           </div>
         </div>
 
         {/* AI Experts Section */}
-        <AIExpertsSection />
+        <AIExpertsSection
+          expertStats={statsMap}
+          championExpert={championExpert}
+          demotedExperts={demotedExperts}
+          expertRanking={expertRanking}
+        />
       </div>
 
       <div className="absolute top-6 right-6 z-20">

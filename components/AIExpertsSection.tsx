@@ -1,102 +1,240 @@
 'use client'
 
 import { useI18n } from '@/contexts/I18nContext'
+import { ExpertId, EXPERT_IDS } from '@/libs/types'
 
-const experts = [
-  {
+interface ExpertData {
+  id: ExpertId
+  gradient: string
+  accentColor: string
+  icon: string
+  specialty: string
+}
+
+const EXPERT_CONFIG: Record<ExpertId, ExpertData> = {
+  beckham_chen: {
     id: 'beckham_chen',
     gradient: 'from-blue-500 to-purple-600',
     accentColor: 'blue',
     icon: '⚽',
     specialty: 'Bayesian Logic',
   },
-  {
+  zidane_gao: {
     id: 'zidane_gao',
     gradient: 'from-amber-500 to-orange-600',
     accentColor: 'amber',
     icon: '🔮',
     specialty: 'Neural Network',
   },
-  {
+  batistuta_zhang: {
     id: 'batistuta_zhang',
     gradient: 'from-red-500 to-rose-600',
     accentColor: 'red',
     icon: '⚡',
     specialty: 'xG Analysis',
   },
-  {
+  shearer_zhang: {
     id: 'shearer_zhang',
     gradient: 'from-green-500 to-emerald-600',
     accentColor: 'green',
     icon: '🎯',
     specialty: 'Physical Battle',
   },
-  {
+  ronaldo_silva: {
     id: 'ronaldo_silva',
     gradient: 'from-yellow-500 to-amber-600',
     accentColor: 'yellow',
     icon: '💫',
     specialty: 'Samba Style',
   },
-]
+}
 
-export default function AIExpertsSection() {
+interface ExpertStats {
+  expertId: string
+  totalMatches: number
+  correctResults: number
+  accuracy: number
+  streak: number
+  rank: number
+  isChampion: boolean
+  medals: string[]
+}
+
+interface AIExpertsSectionProps {
+  expertStats?: Record<ExpertId, ExpertStats>
+  championExpert?: ExpertId | null
+  demotedExperts?: Record<ExpertId, boolean>
+  expertRanking?: ExpertId[]
+  onShareExpert?: (expertId: ExpertId) => void
+}
+
+function ExpertCard({
+  expert,
+  stats,
+  isChampion,
+  isDemoted,
+  rank,
+  onShare,
+}: {
+  expert: ExpertData
+  stats: ExpertStats | null
+  isChampion: boolean
+  isDemoted: boolean
+  rank: number
+  onShare?: () => void
+}) {
   const { t } = useI18n()
+  const name = t(`aiExperts.${expert.id}.name`) || expert.id
+  const preferences = t(`aiExperts.${expert.id}.preferences`) || ''
+  const traits = t(`aiExperts.${expert.id}.traits`) || ''
+
+  const accuracy = stats?.accuracy || 0
+  const streak = stats?.streak || 0
+  const medals = stats?.medals || []
+
+  return (
+    <div
+      className={`
+        group relative transition-all duration-500
+        ${isChampion ? 'scale-105 z-10' : ''}
+        ${isDemoted ? 'opacity-50 scale-95' : ''}
+      `}
+    >
+      {isChampion && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+          <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-black text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse">
+            <span className="text-lg">👑</span>
+            <span>神算子</span>
+          </div>
+        </div>
+      )}
+
+      <div className={`absolute inset-0 bg-gradient-to-br ${expert.gradient} opacity-20 rounded-2xl blur-xl group-hover:opacity-40 transition-opacity duration-500 ${isChampion ? 'animate-pulse' : ''}`} />
+
+      <div className={`
+        relative bg-[#0a0a0a] border rounded-2xl p-6 transition-all duration-300
+        ${isChampion
+          ? 'border-amber-500/50 shadow-2xl shadow-amber-500/20 hover:shadow-amber-500/30'
+          : 'border-slate-800/50 hover:border-slate-700/80'
+        }
+        ${isDemoted ? 'grayscale' : ''}
+        hover:-translate-y-2
+      `}>
+        <div className="flex items-center gap-2 mb-4">
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${expert.gradient} flex items-center justify-center text-xl shadow-lg ${isChampion ? 'ring-2 ring-amber-400' : ''}`}>
+            {expert.icon}
+          </div>
+          <div>
+            <div className="text-xs text-slate-500">Rank #{rank}</div>
+            {streak >= 3 && (
+              <div className="text-xs text-orange-400 font-medium flex items-center gap-1">
+                🔥 {streak}连胜
+              </div>
+            )}
+          </div>
+        </div>
+
+        <h3 className="text-xl font-bold text-white text-center mb-2">
+          {name}
+          {isChampion && <span className="ml-2">👑</span>}
+        </h3>
+
+        <div className={`text-${expert.accentColor}-400 text-xs font-medium text-center mb-4 uppercase tracking-wider`}>
+          {expert.specialty}
+        </div>
+
+        <div className="space-y-3">
+          <div className="bg-slate-900/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-slate-500">Method</span>
+              <span className="text-xs text-emerald-400 font-medium">{accuracy}% 准确</span>
+            </div>
+            <div className="text-sm text-slate-300 truncate">{preferences}</div>
+          </div>
+
+          <div className="bg-slate-900/50 rounded-lg p-3">
+            <div className="text-xs text-slate-500 mb-1">Style</div>
+            <div className="text-sm text-slate-300">{traits}</div>
+          </div>
+        </div>
+
+        {medals.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-1">
+            {medals.map((medal, i) => (
+              <span key={i} className="text-xs bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 px-2 py-1 rounded-full">
+                {medal.replace('_', ' ')}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className={`mt-4 h-1 bg-gradient-to-r ${expert.gradient} rounded-full opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+        {isChampion && onShare && (
+          <button
+            onClick={onShare}
+            className="mt-4 w-full py-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 text-sm font-medium hover:from-amber-500/30 hover:to-orange-500/30 transition-all flex items-center justify-center gap-2"
+          >
+            <span>📤</span>
+            <span>分享神算子战绩</span>
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function AIExpertsSection({
+  expertStats,
+  championExpert,
+  demotedExperts,
+  expertRanking,
+  onShareExpert,
+}: AIExpertsSectionProps) {
+  const { t } = useI18n()
+
+  const stats = expertStats || {} as Record<ExpertId, ExpertStats>
+  const champion = championExpert || null
+  const demoted = demotedExperts || {} as Record<ExpertId, boolean>
+  const ranking = expertRanking || [...EXPERT_IDS]
+
+  const sortedExperts = ranking.map(id => EXPERT_CONFIG[id])
 
   return (
     <div className="py-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            {t('aiPersonas.title') || 'AI Prediction Experts'}
-          </h2>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-purple-500" />
+            <h2 className="text-4xl md:text-5xl font-bold text-white">
+              {t('aiPersonas.title') || 'AI Prediction Experts'}
+            </h2>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-purple-500" />
+          </div>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
             Meet our diverse team of AI personas, each with unique prediction algorithms and football expertise
           </p>
+          {champion && (
+            <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-full">
+              <span className="text-2xl">👑</span>
+              <span className="text-amber-400 font-semibold">当前神算子: {t(`aiExperts.${champion}.name`)}</span>
+              <span className="text-slate-400 text-sm">({stats[champion]?.accuracy || 0}% 准确率)</span>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {experts.map((expert, index) => {
-            const name = t(`aiExperts.${expert.id}.name`) || expert.id
-            const preferences = t(`aiExperts.${expert.id}.preferences`) || ''
-            const traits = t(`aiExperts.${expert.id}.traits`) || ''
-
-            return (
-              <div
-                key={expert.id}
-                className="group relative"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${expert.gradient} opacity-20 rounded-2xl blur-xl group-hover:opacity-40 transition-opacity duration-500`} />
-                <div className="relative bg-[#0a0a0a] border border-slate-800/50 rounded-2xl p-6 hover:border-slate-700/80 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/10">
-                  <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${expert.gradient} flex items-center justify-center text-3xl shadow-lg`}>
-                    {expert.icon}
-                  </div>
-
-                  <h3 className="text-xl font-bold text-white text-center mb-2">
-                    {name}
-                  </h3>
-
-                  <div className={`text-${expert.accentColor}-400 text-xs font-medium text-center mb-4 uppercase tracking-wider`}>
-                    {expert.specialty}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="bg-slate-900/50 rounded-lg p-3">
-                      <div className="text-xs text-slate-500 mb-1">Method</div>
-                      <div className="text-sm text-slate-300 truncate">{preferences}</div>
-                    </div>
-                    <div className="bg-slate-900/50 rounded-lg p-3">
-                      <div className="text-xs text-slate-500 mb-1">Style</div>
-                      <div className="text-sm text-slate-300">{traits}</div>
-                    </div>
-                  </div>
-
-                  <div className={`mt-4 h-1 bg-gradient-to-r ${expert.gradient} rounded-full opacity-60 group-hover:opacity-100 transition-opacity`} />
-                </div>
-              </div>
-            )
-          })}
+          {sortedExperts.map((expert) => (
+            <ExpertCard
+              key={expert.id}
+              expert={expert}
+              stats={stats[expert.id] || null}
+              isChampion={champion === expert.id}
+              isDemoted={demoted[expert.id] || false}
+              rank={ranking.indexOf(expert.id) + 1}
+              onShare={champion === expert.id ? () => onShareExpert?.(expert.id) : undefined}
+            />
+          ))}
         </div>
 
         <div className="mt-16 text-center">
@@ -114,3 +252,6 @@ export default function AIExpertsSection() {
     </div>
   )
 }
+
+export { ExpertCard }
+export type { ExpertStats, AIExpertsSectionProps }
