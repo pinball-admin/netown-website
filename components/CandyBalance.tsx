@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useGeo } from '@/contexts/GeoContext'
 
 interface CandyBalanceProps {
   userId: string
@@ -10,6 +11,7 @@ export default function CandyBalance({ userId }: CandyBalanceProps) {
   const [balance, setBalance] = useState(0)
   const [streak, setStreak] = useState(0)
   const [loading, setLoading] = useState(true)
+  const { isCN } = useGeo()
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -63,6 +65,9 @@ export default function CandyBalance({ userId }: CandyBalanceProps) {
       <span className="text-2xl">🍬</span>
       <div className="flex flex-col">
         <span className="text-white font-bold text-lg">{balance.toLocaleString()}</span>
+        <span className="text-xs text-slate-500">
+          {isCN ? '站内纯净积分' : 'Candy Points'}
+        </span>
         {streak > 1 && (
           <span className="text-xs text-yellow-400">🔥 {streak} day streak</span>
         )}
@@ -71,7 +76,7 @@ export default function CandyBalance({ userId }: CandyBalanceProps) {
         onClick={handleDailyLogin}
         className="ml-2 px-3 py-1 bg-[#00FF66]/20 text-[#00FF66] text-sm rounded-lg hover:bg-[#00FF66]/30 transition-colors"
       >
-        Daily
+        {isCN ? '签到' : 'Daily'}
       </button>
     </div>
   )

@@ -4,6 +4,7 @@ import { I18nProvider } from '@/contexts/I18nContext'
 import { ComplianceProvider } from '@/contexts/ComplianceContext'
 import { PredictionProvider } from '@/contexts/PredictionContext'
 import { UserProvider } from '@/contexts/UserContext'
+import { GeoProvider } from '@/contexts/GeoContext'
 import Footer from '@/components/Footer'
 import ComplianceDisclaimer from '@/components/ComplianceDisclaimer'
 
@@ -24,15 +25,17 @@ export default function RootLayout({
       </head>
       <body>
         <I18nProvider>
-          <ComplianceProvider>
-            <PredictionProvider>
-              <UserProvider>
-                {children}
-                <ComplianceDisclaimer />
-                <Footer />
-              </UserProvider>
-            </PredictionProvider>
-          </ComplianceProvider>
+          <GeoProvider>
+            <ComplianceProvider>
+              <PredictionProvider>
+                <UserProvider>
+                  {children}
+                  <ComplianceDisclaimer />
+                  <Footer />
+                </UserProvider>
+              </PredictionProvider>
+            </ComplianceProvider>
+          </GeoProvider>
         </I18nProvider>
       </body>
     </html>
