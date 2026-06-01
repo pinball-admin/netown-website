@@ -41,24 +41,24 @@ export default function HeroSection() {
   }, [])
 
   return (
-    <div className="relative w-full py-16 px-6 overflow-hidden">
+    <div className="relative w-full py-8 sm:py-12 px-4 sm:px-6 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-[#00FF66]/5 via-transparent to-transparent" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#00FF66]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] sm:w-[600px] lg:w-[800px] h-[200px] sm:h-[300px] lg:h-[400px] bg-[#00FF66]/10 rounded-full blur-[80px] sm:blur-[100px] lg:blur-[120px] pointer-events-none" />
 
       <div className="relative max-w-4xl mx-auto text-center">
-        <div className="mb-4">
-          <span className="inline-block px-4 py-1.5 bg-[#00FF66]/10 border border-[#00FF66]/30 rounded-full text-[#00FF66] text-sm font-medium animate-pulse-glow">
+        <div className="mb-3 sm:mb-4">
+          <span className="inline-block px-3 py-1 sm:px-4 sm:py-1.5 bg-[#00FF66]/10 border border-[#00FF66]/30 rounded-full text-[#00FF66] text-xs sm:text-sm font-medium animate-pulse-glow">
             🏆 FIFA World Cup 2026
           </span>
         </div>
 
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
           <span className="text-white">FIFA World Cup 2026</span>
           <br />
           <span className="text-cyber">AI Prediction Arena</span>
         </h1>
 
-        <div className="flex justify-center gap-4 mb-8">
+        <div className="flex justify-center items-center gap-2 sm:gap-3 mb-6 sm:mb-8 px-2">
           {mounted ? (
             <>
               <CountdownUnit value={timeLeft.days} label="Days" />
@@ -82,17 +82,17 @@ export default function HeroSection() {
           )}
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
           <a
             href="#schedule"
-            className="btn-cyber flex items-center gap-2"
+            className="btn-cyber flex items-center gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2"
           >
             <span>📅</span>
             <span>{t('schedule.title')}</span>
           </a>
           <a
             href="#teams"
-            className="px-4 py-2 bg-slate-800/50 text-slate-300 border border-slate-600 rounded-lg hover:border-[#00FF66]/50 hover:text-white transition-all duration-200"
+            className="px-3 sm:px-4 py-2 bg-slate-800/50 text-slate-300 border border-slate-600 rounded-lg hover:border-[#00FF66]/50 hover:text-white transition-all duration-200 text-xs sm:text-sm"
           >
             🏟️ {t('teamMatrix.title')}
           </a>
@@ -104,23 +104,23 @@ export default function HeroSection() {
 
 function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center flex-shrink-0">
       <div className="relative">
-        <div className="w-16 h-16 md:w-20 md:h-20 bg-[#0a0a0a] border-2 border-[#00FF66]/40 rounded-xl flex items-center justify-center glow-green">
-          <span className="text-3xl md:text-4xl font-bold text-cyber font-mono">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-[#0a0a0a] border-2 border-[#00FF66]/40 rounded-lg sm:rounded-xl flex items-center justify-center glow-green">
+          <span className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-bold text-cyber font-mono">
             {value.toString().padStart(2, '0')}
           </span>
         </div>
       </div>
-      <span className="mt-2 text-xs text-slate-500 uppercase tracking-wider">{label}</span>
+      <span className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-slate-500 uppercase tracking-wider">{label}</span>
     </div>
   )
 }
 
 function CountdownSeparator() {
   return (
-    <div className="flex items-center justify-center h-16 md:h-20">
-      <span className="text-2xl text-[#00FF66] animate-pulse">:</span>
+    <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 px-1">
+      <span className="text-lg sm:text-xl text-[#00FF66] animate-pulse font-bold">:</span>
     </div>
   )
 }
