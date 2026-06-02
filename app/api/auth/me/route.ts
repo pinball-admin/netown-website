@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { verifyToken } from '@/libs/auth/jwt'
-import prisma from '@/libs/prisma/client'
+import { prisma } from '@/libs/prisma/client'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'

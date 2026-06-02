@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { sendEmail, generateVerificationEmail } from '@/libs/email/resend'
-import prisma from '@/libs/prisma/client'
+import { prisma } from '@/libs/prisma/client'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
