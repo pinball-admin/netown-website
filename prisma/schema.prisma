@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  name                  String
+  region                String   @default("GLOBAL")
+  role                  String   @default("user")
+  candyBalance          Int      @default(100)
+  totalPredictions      Int      @default(0)
+  correctPredictions    Int      @default(0)
+  lastLoginAt           DateTime @default(now())
+  createdAt             DateTime @default(now())
+  isVerified            Boolean  @default(false)
+  predictionUnlockUntil DateTime?
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model CandyTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  type        String // 'DAILY_LOGIN', 'PREDICTION_WIN', 'PREDICTION_BONUS', 'REFERRAL', 'PURCHASE'
+  description String?
+  createdAt   DateTime @default(now())
+}

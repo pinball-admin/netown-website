@@ -129,7 +129,11 @@ export async function handleSendCode(request: Request) {
     return NextResponse.json({ success: false, message: 'Invalid email' }, { status: 400 })
   }
   
-  await generateVerificationCode(email)
+  const code = await generateVerificationCode(email)
   
-  return NextResponse.json({ success: true, message: 'Verification code sent' })
+  return NextResponse.json({ 
+    success: true, 
+    message: 'Verification code sent',
+    code: process.env.NODE_ENV === 'development' ? code : undefined
+  })
 }

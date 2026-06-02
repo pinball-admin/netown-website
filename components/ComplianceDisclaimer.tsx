@@ -1,12 +1,16 @@
 'use client'
 
+import { useI18n } from '@/contexts/I18nContext'
+
 export default function ComplianceDisclaimer() {
+  const { t } = useI18n()
+  
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm border-t border-slate-800 py-3 px-4 z-40">
-      <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 text-xs text-slate-400">
-        <span className="text-yellow-400">⚠️</span>
+    <div className="bg-[#1a1a2e]/80 backdrop-blur-sm border-t border-slate-800 py-4 px-4">
+      <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 text-sm text-slate-400">
+        <span className="text-yellow-400 text-base">⚠️</span>
         <span className="text-center">
-          <strong className="text-slate-300">Disclaimer:</strong> All predictions are free of charge and intended for statistical research only. Not investment or betting advice.
+          {t('compliance.disclaimer') || 'Disclaimer: All predictions are free of charge and intended for statistical research only. Not investment or betting advice.'}
         </span>
       </div>
     </div>

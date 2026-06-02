@@ -212,7 +212,7 @@ export default function AIExpertsSection({
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-purple-500" />
           </div>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Meet our diverse team of AI personas, each with unique prediction algorithms and football expertise
+            {t('aiPersonas.description') || 'Meet our diverse team of AI personas, each with unique prediction algorithms and football expertise'}
           </p>
           {champion && (
             <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-full">
@@ -242,7 +242,7 @@ export default function AIExpertsSection({
             href="/football"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-400 font-semibold hover:from-purple-500/30 hover:to-blue-500/30 hover:border-purple-500/50 transition-all duration-300 hover:-translate-y-1"
           >
-            <span>Try AI Predictions</span>
+            <span>{t('aiPersonas.cta') || 'Try AI Predictions'}</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>

@@ -1,19 +1,20 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
-  onLogin: (user: any) => void
 }
 
-export default function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [step, setStep] = useState<'email' | 'code'>('email')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const { login } = useAuth()
 
   const handleSendCode = async () => {
     if (!email || !email.includes('@')) {
@@ -22,6 +23,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps
     }
 
     setLoading(true)
+    setMessage('')
     try {
       const response = await fetch('/api/auth/send-code', {
         method: 'POST',
@@ -37,8 +39,9 @@ export default function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps
       }
     } catch (error) {
       setMessage('Failed to send code')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleLogin = async () => {
@@ -48,6 +51,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps
     }
 
     setLoading(true)
+    setMessage('')
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -56,15 +60,23 @@ export default function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps
       })
       const result = await response.json()
       if (result.success) {
-        onLogin(result.user)
+        login(result.user)
         onClose()
       } else {
         setMessage(result.message)
       }
     } catch (error) {
       setMessage('Login failed')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
+  }
+
+  const handleReset = () => {
+    setStep('email')
+    setEmail('')
+    setCode('')
+    setMessage('')
   }
 
   if (!isOpen) return null
@@ -77,7 +89,10 @@ export default function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps
       />
       <div className="relative w-full max-w-md bg-[#0a0a0a] border border-[#00FF66]/30 rounded-2xl p-6 sm:p-8 shadow-xl shadow-[#00FF66]/20">
         <button
-          onClick={onClose}
+          onClick={() => {
+            onClose()
+            setTimeout(handleReset, 200)
+          }}
           className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
         >
           ✕
@@ -102,13 +117,14 @@ export default function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:border-[#00FF66] focus:outline-none transition-colors"
+                className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#00FF66]/50 transition-colors"
+                autoComplete="email"
               />
             </div>
             <button
               onClick={handleSendCode}
               disabled={loading}
-              className="w-full py-3 bg-[#00FF66] text-black font-bold rounded-xl hover:bg-[#00FF66]/90 transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-[#00FF66] text-black font-bold rounded-xl hover:bg-[#00FF66]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Sending...' : 'Send Verification Code'}
             </button>
@@ -121,30 +137,36 @@ export default function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
+                placeholder="000000"
                 maxLength={6}
-                className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:border-[#00FF66] focus:outline-none transition-colors text-center text-xl tracking-widest"
+                className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white placeholder-slate-500 text-center text-2xl tracking-widest font-mono focus:outline-none focus:border-[#00FF66]/50 transition-colors"
+                autoComplete="one-time-code"
+                inputMode="numeric"
               />
             </div>
             <button
               onClick={handleLogin}
               disabled={loading}
-              className="w-full py-3 bg-[#00FF66] text-black font-bold rounded-xl hover:bg-[#00FF66]/90 transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-[#00FF66] text-black font-bold rounded-xl hover:bg-[#00FF66]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Logging in...' : 'Login / Register'}
+              {loading ? 'Verifying...' : 'Login / Register'}
             </button>
             <button
-              onClick={() => setStep('email')}
-              className="w-full py-2 text-slate-500 hover:text-white transition-colors text-sm"
+              onClick={() => {
+                setStep('email')
+                setCode('')
+                setMessage('')
+              }}
+              className="w-full py-3 text-slate-400 hover:text-white transition-colors"
             >
-              Change email
+              Change Email
             </button>
           </div>
         )}
 
-        <p className="mt-6 text-xs text-slate-600 text-center">
+        <div className="mt-6 text-center text-xs text-slate-500">
           By logging in, you agree to our Terms of Service and Privacy Policy
-        </p>
+        </div>
       </div>
     </div>
   )
