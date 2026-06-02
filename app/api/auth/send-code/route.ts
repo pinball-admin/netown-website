@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { sendEmail, generateVerificationEmail } from '@/libs/email/resend'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 // In-memory storage for development
 interface VerificationCode {
   code: string
