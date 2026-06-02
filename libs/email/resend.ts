@@ -17,7 +17,7 @@ export async function sendEmail({ to, subject, html }: EmailParams) {
 
   try {
     const data = await resend.emails.send({
-      from: 'Netown <no-reply@netown.ai>',
+      from: 'Netown <onboarding@resend.dev>',
       to,
       subject,
       html,
