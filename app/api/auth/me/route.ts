@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { verifyToken } from '@/libs/auth/jwt'
-
-// Import the users map from login route (we'll need to share it)
-// For now, let's create a shared storage
-const users = new Map<string, any>()
+import prisma from '@/libs/prisma/client'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -29,24 +26,16 @@ export async function GET() {
       )
     }
 
-    // Find user or create a mock one
-    let user = users.get(payload.email)
+    // Find user from database
+    const user = await prisma.user.findUnique({
+      where: { email: payload.email },
+    })
+
     if (!user) {
-      user = {
-        id: payload.userId,
-        email: payload.email,
-        name: payload.name,
-        region: payload.region,
-        role: 'user',
-        candyBalance: 100,
-        totalPredictions: 0,
-        correctPredictions: 0,
-        lastLoginAt: new Date(),
-        createdAt: new Date(),
-        isVerified: true,
-        predictionUnlockUntil: new Date(Date.now() + 48 * 60 * 60 * 1000),
-      }
-      users.set(payload.email, user)
+      return NextResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({

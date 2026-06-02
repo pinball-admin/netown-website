@@ -1,24 +1,8 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import bcrypt from 'bcryptjs'
 import { generateToken } from '@/libs/auth/jwt'
-
-// In-memory storage for development
-interface User {
-  id: string
-  email: string
-  name: string
-  region: string
-  role: string
-  candyBalance: number
-  totalPredictions: number
-  correctPredictions: number
-  lastLoginAt: Date
-  createdAt: Date
-  isVerified: boolean
-  predictionUnlockUntil: Date | null
-}
-
-const users = new Map<string, User>()
+import prisma from '@/libs/prisma/client'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -34,7 +18,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // For now, let's accept any 6-digit code for testing
     if (code.length !== 6 || !/^\d+$/.test(code)) {
       return NextResponse.json(
         { success: false, message: 'Invalid verification code' },
@@ -42,33 +25,71 @@ export async function POST(request: Request) {
       )
     }
 
-    let user: User
-    const isNewUser = !users.has(email)
-    const predictionUnlockUntil = new Date(Date.now() + 48 * 60 * 60 * 1000)
+    // Find verification token in database
+    const verificationToken = await prisma.verificationToken.findFirst({
+      where: { email },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    if (!verificationToken) {
+      return NextResponse.json(
+        { success: false, message: 'No verification code found. Please request a new code.' },
+        { status: 400 }
+      )
+    }
+
+    // Check if token has expired
+    if (new Date(verificationToken.expiresAt) < new Date()) {
+      return NextResponse.json(
+        { success: false, message: 'Verification code has expired. Please request a new code.' },
+        { status: 400 }
+      )
+    }
+
+    // Verify the code
+    const isValidCode = await bcrypt.compare(code, verificationToken.token)
+    if (!isValidCode) {
+      // Increment attempts count
+      await prisma.verificationToken.update({
+        where: { id: verificationToken.id },
+        data: { attempts: verificationToken.attempts + 1 },
+      })
+      return NextResponse.json(
+        { success: false, message: 'Invalid verification code' },
+        { status: 400 }
+      )
+    }
+
+    // Delete the token after successful verification
+    await prisma.verificationToken.delete({
+      where: { id: verificationToken.id },
+    })
+
+    // Find or create user
+    let user = await prisma.user.findUnique({ where: { email } })
+    const isNewUser = !user
 
     if (isNewUser) {
-      user = {
-        id: crypto.randomUUID(),
-        email,
-        name: email.split('@')[0],
-        region: 'GLOBAL',
-        role: 'user',
-        candyBalance: 100,
-        totalPredictions: 0,
-        correctPredictions: 0,
-        lastLoginAt: new Date(),
-        createdAt: new Date(),
-        isVerified: true,
-        predictionUnlockUntil,
-      }
-      users.set(email, user)
-
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: email.split('@')[0],
+          region: 'GLOBAL',
+          role: 'user',
+          candyBalance: 100,
+          isVerified: true,
+          predictionUnlockUntil: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        },
+      })
       console.log(`[AUTH] New user registered: ${email}`)
     } else {
-      user = users.get(email)!
-      user.lastLoginAt = new Date()
-      user.predictionUnlockUntil = predictionUnlockUntil
-
+      user = await prisma.user.update({
+        where: { email },
+        data: {
+          lastLoginAt: new Date(),
+          predictionUnlockUntil: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        },
+      })
       console.log(`[AUTH] User logged in: ${email}`)
     }
 

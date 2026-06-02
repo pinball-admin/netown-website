@@ -1,25 +1,14 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { sendEmail, generateVerificationEmail } from '@/libs/email/resend'
+import prisma from '@/libs/prisma/client'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 
-// In-memory storage for development
-interface VerificationCode {
-  code: string
-  expiresAt: Date
-  attempts: number
-  hashedCode: string
-}
-
-const verificationCodes = new Map<string, VerificationCode>()
-
 export async function POST(request: Request) {
   try {
     const { email } = await request.json()
-
-    console.log('[AUTH] send-code endpoint called with email:', email)
 
     if (!email || !email.includes('@')) {
       return NextResponse.json(
@@ -31,18 +20,17 @@ export async function POST(request: Request) {
     const code = Math.floor(100000 + Math.random() * 900000).toString()
     const hashedCode = await bcrypt.hash(code, 10)
 
-    // Store in memory
-    verificationCodes.set(email, {
-      code,
-      hashedCode,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      attempts: 0
+    // Store verification token in database
+    await prisma.verificationToken.create({
+      data: {
+        email,
+        token: hashedCode,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+        attempts: 0,
+      },
     })
 
     console.log(`[AUTH] Generated verification code for ${email}: ${code}`)
-
-    // Check if RESEND_API_KEY is configured
-    console.log('[AUTH] RESEND_API_KEY configured:', !!process.env.RESEND_API_KEY)
 
     const emailResult = await sendEmail({
       to: email,
