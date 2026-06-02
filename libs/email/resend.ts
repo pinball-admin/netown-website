@@ -7,6 +7,10 @@ interface EmailParams {
 }
 
 export async function sendEmail({ to, subject, html }: EmailParams) {
+  console.log('[EMAIL] sendEmail called with to:', to)
+  console.log('[EMAIL] RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
+  console.log('[EMAIL] RESEND_API_KEY length:', process.env.RESEND_API_KEY?.length)
+  
   if (!process.env.RESEND_API_KEY) {
     console.warn('[WARN] RESEND_API_KEY not configured, email will not be sent')
     return { success: true, mock: true }
