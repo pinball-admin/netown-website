@@ -1,7 +1,5 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 interface EmailParams {
   to: string
   subject: string
@@ -13,6 +11,9 @@ export async function sendEmail({ to, subject, html }: EmailParams) {
     console.warn('[WARN] RESEND_API_KEY not configured, email will not be sent')
     return { success: true, mock: true }
   }
+
+  // Only create Resend instance when API key is available
+  const resend = new Resend(process.env.RESEND_API_KEY)
 
   try {
     const data = await resend.emails.send({
