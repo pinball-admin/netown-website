@@ -1,11 +1,17 @@
 import jwt from 'jsonwebtoken'
-import type { User } from '@prisma/client'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
 const JWT_EXPIRES_IN = '7d'
 
 export interface JWTPayload {
   userId: string
+  email: string
+  name: string
+  region: string
+}
+
+export interface User {
+  id: string
   email: string
   name: string
   region: string
