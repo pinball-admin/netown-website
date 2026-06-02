@@ -19,6 +19,8 @@ export async function POST(request: Request) {
   try {
     const { email } = await request.json()
 
+    console.log('[AUTH] send-code endpoint called with email:', email)
+
     if (!email || !email.includes('@')) {
       return NextResponse.json(
         { success: false, message: 'Invalid email' },
@@ -39,16 +41,16 @@ export async function POST(request: Request) {
 
     console.log(`[AUTH] Generated verification code for ${email}: ${code}`)
 
-    // In development, we'll log the code instead of sending email
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[AUTH] Verification code for ${email}: ${code}`)
-    }
+    // Check if RESEND_API_KEY is configured
+    console.log('[AUTH] RESEND_API_KEY configured:', !!process.env.RESEND_API_KEY)
 
     const emailResult = await sendEmail({
       to: email,
       subject: 'Your Netown Verification Code',
       html: generateVerificationEmail(code),
     })
+
+    console.log('[AUTH] Email send result:', emailResult)
 
     if (!emailResult.success) {
       console.warn('[AUTH] Email service failed, but verification token saved')
