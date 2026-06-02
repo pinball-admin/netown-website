@@ -6,6 +6,9 @@ import { verifyToken } from '@/libs/auth/jwt'
 // For now, let's create a shared storage
 const users = new Map<string, any>()
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const cookieStore = await cookies()
