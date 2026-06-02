@@ -50,10 +50,12 @@ export async function POST(request: Request) {
       html: generateVerificationEmail(code),
     })
 
-    console.log('[AUTH] Email send result:', emailResult)
-
     if (!emailResult.success) {
-      console.warn('[AUTH] Email service failed, but verification token saved')
+      console.error('[AUTH] Failed to send email:', emailResult.error)
+      return NextResponse.json(
+        { success: false, message: 'Failed to send verification email. Please try again later.' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({
