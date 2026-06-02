@@ -22,6 +22,7 @@ model User {
   createdAt             DateTime @default(now())
   isVerified            Boolean  @default(false)
   predictionUnlockUntil DateTime?
+  posts                 Post[]
 }
 
 model VerificationToken {
@@ -40,4 +41,16 @@ model CandyTransaction {
   type        String // 'DAILY_LOGIN', 'PREDICTION_WIN', 'PREDICTION_BONUS', 'REFERRAL', 'PURCHASE'
   description String?
   createdAt   DateTime @default(now())
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  userId     String
+  content    String
+  imageUrl   String?
+  likes      Int      @default(0)
+  comments   Int      @default(0)
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

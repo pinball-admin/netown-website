@@ -13,6 +13,7 @@ import LanguageSwitcher from '@/components/football/LanguageSwitcher'
 import AmazonBanner from '@/components/football/AmazonBanner'
 import GamersCorner from '@/components/football/GamersCorner'
 import DynamicAdBanner from '@/components/football/DynamicAdBanner'
+import CommunityForum from '@/components/football/CommunityForum'
 import ConnectWalletButton from '@/components/football/ConnectWalletButton'
 import HeroSection from '@/components/football/HeroSection'
 import { useI18n } from '@/contexts/I18nContext'
@@ -421,64 +422,7 @@ export default function FootballPage() {
               <GamersCorner />
 
               {/* Community Forum - Hot Discussions */}
-              <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
-                <h2 className="text-lg font-semibold bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent mb-4 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
-                  🔥 Community Forum
-                </h2>
-                <div className="space-y-3 max-h-[600px] overflow-y-auto scrollbar-thin">
-                  {communityPosts.slice(0, 12).map((post) => (
-                    <div
-                      key={post.id}
-                      className={`bg-slate-800/40 backdrop-blur-sm border rounded-xl p-3 hover:border-orange-500/30 transition-all duration-300 ${
-                        post.isPinned ? 'border-amber-500/50' : post.isHot ? 'border-orange-500/30' : 'border-slate-700/60'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-sm flex-shrink-0">
-                          {post.avatar}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-white text-xs font-medium truncate">{post.author}</span>
-                            <span>{post.country}</span>
-                            {post.isHot && <span className="text-xs bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full">🔥 HOT</span>}
-                            {post.isPinned && <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">📌 Pinned</span>}
-                          </div>
-                          <span className="text-slate-500 text-xs">{post.time}</span>
-                        </div>
-                      </div>
-                      <p className="text-slate-300 text-xs leading-relaxed mb-2 line-clamp-3">{post.content}</p>
-                      <div className="mb-2 rounded-lg overflow-hidden">
-                        <img src={post.imageUrl} alt="Football action" className="w-full h-28 object-cover" />
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-slate-500 text-xs">
-                          <span>❤️</span>
-                          <span>{post.likes}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-slate-500 text-xs">
-                          <span>💬</span>
-                          <span>{post.comments}</span>
-                        </div>
-                        <div className="flex-1" />
-                        <div className="flex gap-1 flex-wrap">
-                          {post.tags.slice(0, 2).map((tag) => (
-                            <span key={tag} className="text-xs bg-cyan-500/10 text-cyan-400 px-1.5 py-0.5 rounded">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 pt-3 border-t border-slate-700/50">
-                  <button className="w-full py-2 bg-gradient-to-r from-orange-500/20 to-pink-500/20 border border-orange-500/30 rounded-lg text-orange-400 text-xs font-medium hover:from-orange-500/30 hover:to-pink-500/30 transition-all">
-                    View All 26+ Discussions →
-                  </button>
-                </div>
-              </div>
+              <CommunityForum />
             </div>
           </div>
         </div>
