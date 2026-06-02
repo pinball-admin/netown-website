@@ -7,7 +7,7 @@ interface ExpertData {
   id: ExpertId
   gradient: string
   accentColor: string
-  icon: string
+  imageUrl: string
   specialty: string
 }
 
@@ -16,35 +16,35 @@ const EXPERT_CONFIG: Record<ExpertId, ExpertData> = {
     id: 'beckham_chen',
     gradient: 'from-blue-500 to-purple-600',
     accentColor: 'blue',
-    icon: '⚽',
+    imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=200',
     specialty: 'Bayesian Logic',
   },
   zidane_gao: {
     id: 'zidane_gao',
     gradient: 'from-amber-500 to-orange-600',
     accentColor: 'amber',
-    icon: '🔮',
+    imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=200',
     specialty: 'Neural Network',
   },
   batistuta_zhang: {
     id: 'batistuta_zhang',
     gradient: 'from-red-500 to-rose-600',
     accentColor: 'red',
-    icon: '⚡',
+    imageUrl: 'https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=200',
     specialty: 'xG Analysis',
   },
   shearer_zhang: {
     id: 'shearer_zhang',
     gradient: 'from-green-500 to-emerald-600',
     accentColor: 'green',
-    icon: '🎯',
+    imageUrl: 'https://images.unsplash.com/photo-1522778114943-52418b61a052?w=200',
     specialty: 'Physical Battle',
   },
   ronaldo_silva: {
     id: 'ronaldo_silva',
     gradient: 'from-yellow-500 to-amber-600',
     accentColor: 'yellow',
-    icon: '💫',
+    imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=200',
     specialty: 'Samba Style',
   },
 }
@@ -121,8 +121,8 @@ function ExpertCard({
         hover:-translate-y-2
       `}>
         <div className="flex items-center gap-2 mb-4">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${expert.gradient} flex items-center justify-center text-xl shadow-lg ${isChampion ? 'ring-2 ring-amber-400' : ''}`}>
-            {expert.icon}
+          <div className={`w-10 h-10 rounded-xl overflow-hidden shadow-lg ${isChampion ? 'ring-2 ring-amber-400' : ''}`}>
+            <img src={expert.imageUrl} alt={name} className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="text-xs text-slate-500">Rank #{rank}</div>
