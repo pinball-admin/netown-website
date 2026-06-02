@@ -7,15 +7,21 @@ interface EmailParams {
 }
 
 export async function sendEmail({ to, subject, html }: EmailParams) {
+  console.log('[EMAIL] sendEmail called with to:', to)
+  console.log('[EMAIL] RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
+  console.log('[EMAIL] RESEND_API_KEY length:', process.env.RESEND_API_KEY?.length)
+  
   if (!process.env.RESEND_API_KEY) {
     console.error('[ERROR] RESEND_API_KEY is not configured!')
     return { success: false, error: 'Email service not configured' }
   }
 
-  // Only create Resend instance when API key is available
   const resend = new Resend(process.env.RESEND_API_KEY)
 
   try {
+    console.log('[EMAIL] Attempting to send email from: auth@send.netown.cn')
+    console.log('[EMAIL] Subject:', subject)
+    
     const data = await resend.emails.send({
       from: 'Netown <auth@send.netown.cn>',
       to,
@@ -24,10 +30,13 @@ export async function sendEmail({ to, subject, html }: EmailParams) {
     })
 
     console.log('[EMAIL] Sent successfully to:', to)
+    console.log('[EMAIL] Response data:', JSON.stringify(data, null, 2))
     return { success: true, data }
-  } catch (error) {
+  } catch (error: any) {
     console.error('[EMAIL] Failed to send:', error)
-    return { success: false, error }
+    console.error('[EMAIL] Error message:', error.message)
+    console.error('[EMAIL] Error stack:', error.stack)
+    return { success: false, error: error.message || 'Unknown error' }
   }
 }
 
