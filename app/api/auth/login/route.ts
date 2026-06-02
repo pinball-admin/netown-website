@@ -20,6 +20,9 @@ interface User {
 
 const users = new Map<string, User>()
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   try {
     const { email, code } = await request.json()
