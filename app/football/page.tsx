@@ -463,9 +463,9 @@ export default function FootballPage() {
                   ))}
                 </div>
                 <div className="mt-3 pt-3 border-t border-slate-700/50">
-                  <button className="w-full py-2 bg-gradient-to-r from-orange-500/20 to-pink-500/20 border border-orange-500/30 rounded-lg text-orange-400 text-xs font-medium hover:from-orange-500/30 hover:to-pink-500/30 transition-all">
+                  <Link href="/football/forum" className="w-full py-2 bg-gradient-to-r from-orange-500/20 to-pink-500/20 border border-orange-500/30 rounded-lg text-orange-400 text-xs font-medium hover:from-orange-500/30 hover:to-pink-500/30 transition-all flex items-center justify-center">
                     View All 26+ Discussions →
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
