@@ -3,6 +3,12 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+// Load .env.local (local SQLite override) after .env
+try {
+  const { config } = require("dotenv");
+  config({ path: ".env.local", override: true });
+} catch {}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {

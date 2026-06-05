@@ -16,28 +16,28 @@ const shopItems: ShopItem[] = [
     price: '$89.99',
     image: '⚽',
     tagKey: 'shopItems.argentinaJersey',
-    affiliateLink: 'https://www.amazon.com/dp/EXAMPLE?tag=netown-20',
+    affiliateLink: 'https://www.amazon.com/s?k=argentina+world+cup+jersey+2026&tag=netown-20',
   },
   {
     id: 2,
     price: '$94.99',
     image: '🏆',
     tagKey: 'shopItems.brazilSamba',
-    affiliateLink: 'https://www.amazon.com/dp/EXAMPLE?tag=netown-20',
+    affiliateLink: 'https://www.amazon.com/s?k=brazil+world+cup+jersey+2026&tag=netown-20',
   },
   {
     id: 3,
     price: '$84.99',
     image: '🥇',
     tagKey: 'shopItems.franceEuro',
-    affiliateLink: 'https://www.amazon.com/dp/EXAMPLE?tag=netown-20',
+    affiliateLink: 'https://www.amazon.com/s?k=france+world+cup+jersey+2026&tag=netown-20',
   },
   {
     id: 4,
     price: '$79.99',
     image: '🦁',
     tagKey: 'shopItems.englandPremium',
-    affiliateLink: 'https://www.amazon.com/dp/EXAMPLE?tag=netown-20',
+    affiliateLink: 'https://www.amazon.com/s?k=england+world+cup+jersey+2026&tag=netown-20',
   },
 ]
 

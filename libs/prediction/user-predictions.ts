@@ -1,168 +1,248 @@
-export type PredictionType = 'match_result' | 'score' | 'over_under' | 'total_goals'
+// User Predictions - Prisma/PostgreSQL backed
+// All prediction operations are persisted to the database
 
-export type MatchResult = 'win' | 'draw' | 'loss'
+import { prisma } from '@/libs/prisma/client'
+import { recordPredictionResult, recordPredictionAttempt } from '@/libs/candy/ledger'
 
-export interface UserPrediction {
+export type PredictionType = 'MATCH_RESULT' | 'SCORE' | 'OVER_UNDER' | 'TOTAL_GOALS'
+
+export interface UserPredictionResult {
   id: string
   userId: string
   matchId: string
-  type: PredictionType
+  predictionType: string
   prediction: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  isCorrect?: boolean
-  pointsAwarded?: number
+  difficulty: string
+  isCorrect: boolean | null
+  pointsAwarded: number
+  settledAt: Date | null
   createdAt: Date
-  matchStartTime: Date
 }
 
-export interface Match {
-  id: string
-  homeTeam: string
-  awayTeam: string
-  homeScore?: number
-  awayScore?: number
-  startTime: Date
-  status: 'upcoming' | 'in_progress' | 'completed'
+const DIFFICULTY_MAP: Record<string, 'easy' | 'medium' | 'hard'> = {
+  MATCH_RESULT: 'easy',
+  SCORE: 'hard',
+  OVER_UNDER: 'medium',
+  TOTAL_GOALS: 'hard',
 }
 
-let predictions: UserPrediction[] = []
-let matches: Match[] = []
-
-export function createPrediction(
+/**
+ * Create a new prediction for a user on a specific match
+ */
+export async function createPrediction(
   userId: string,
   matchId: string,
   type: PredictionType,
   prediction: string
-): UserPrediction {
-  const match = matches.find(m => m.id === matchId)
-  if (!match || match.status !== 'upcoming') {
-    throw new Error('Match is not available for prediction')
-  }
-  
-  const difficulties: Record<string, 'easy' | 'medium' | 'hard'> = {
-    match_result: 'easy',
-    score: 'hard',
-    over_under: 'medium',
-    total_goals: 'hard'
-  }
-  
-  const newPrediction: UserPrediction = {
-    id: `pred-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    userId,
-    matchId,
-    type,
-    prediction,
-    difficulty: difficulties[type],
-    createdAt: new Date(),
-    matchStartTime: match.startTime
-  }
-  
-  predictions.push(newPrediction)
-  
-  return newPrediction
-}
-
-export function getPredictionsByUser(userId: string): UserPrediction[] {
-  return predictions.filter(p => p.userId === userId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-}
-
-export function getPredictionsByMatch(matchId: string): UserPrediction[] {
-  return predictions.filter(p => p.matchId === matchId)
-}
-
-export function getMatchById(matchId: string): Match | undefined {
-  return matches.find(m => m.id === matchId)
-}
-
-export function getUpcomingMatches(): Match[] {
-  return matches.filter(m => m.status === 'upcoming').sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
-}
-
-export function getCompletedMatches(): Match[] {
-  return matches.filter(m => m.status === 'completed')
-}
-
-export function simulateMatchResult(matchId: string, homeScore: number, awayScore: number) {
-  const match = matches.find(m => m.id === matchId)
-  if (!match) return
-  
-  match.homeScore = homeScore
-  match.awayScore = awayScore
-  match.status = 'completed'
-  
-  const matchPredictions = predictions.filter(p => p.matchId === matchId && p.isCorrect === undefined)
-  
-  matchPredictions.forEach(prediction => {
-    let isCorrect = false
-    
-    switch (prediction.type) {
-      case 'match_result':
-        const expectedResult = prediction.prediction
-        const actualResult = homeScore > awayScore ? 'win' : homeScore < awayScore ? 'loss' : 'draw'
-        isCorrect = expectedResult === actualResult
-        break
-        
-      case 'score':
-        isCorrect = prediction.prediction === `${homeScore}-${awayScore}`
-        break
-        
-      case 'over_under':
-        const total = homeScore + awayScore
-        const [, threshold] = prediction.prediction.split('_')
-        const isOver = total > parseFloat(threshold)
-        isCorrect = (prediction.prediction.startsWith('over') && isOver) || 
-                   (prediction.prediction.startsWith('under') && !isOver)
-        break
-        
-      case 'total_goals':
-        const totalGoals = homeScore + awayScore
-        isCorrect = prediction.prediction === totalGoals.toString()
-        break
-    }
-    
-    prediction.isCorrect = isCorrect
+): Promise<UserPredictionResult> {
+  // Check if user already predicted this match+type
+  const existing = await prisma.userPrediction.findFirst({
+    where: {
+      userId,
+      matchId,
+      predictionType: type,
+    },
   })
-}
 
-export function initMockMatches() {
-  const teamNames = ['Argentina', 'Brazil', 'France', 'Germany', 'Spain', 'England', 'Italy', 'Netherlands']
-  
-  const mockMatches: Match[] = []
-  
-  for (let i = 0; i < 10; i++) {
-    const homeTeam = teamNames[Math.floor(Math.random() * teamNames.length)]
-    let awayTeam = teamNames[Math.floor(Math.random() * teamNames.length)]
-    while (awayTeam === homeTeam) {
-      awayTeam = teamNames[Math.floor(Math.random() * teamNames.length)]
-    }
-    
-    const isCompleted = Math.random() > 0.6
-    const startTime = isCompleted 
-      ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
-      : new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000)
-    
-    mockMatches.push({
-      id: `match-${i + 1}`,
-      homeTeam,
-      awayTeam,
-      homeScore: isCompleted ? Math.floor(Math.random() * 5) : undefined,
-      awayScore: isCompleted ? Math.floor(Math.random() * 5) : undefined,
-      startTime,
-      status: isCompleted ? 'completed' : 'upcoming'
-    })
+  if (existing) {
+    throw new Error('You have already made this prediction for this match')
   }
-  
-  matches = mockMatches
+
+  const newPrediction = await prisma.userPrediction.create({
+    data: {
+      userId,
+      matchId,
+      predictionType: type,
+      prediction,
+      difficulty: DIFFICULTY_MAP[type] || 'easy',
+      isCorrect: null,
+      pointsAwarded: 0,
+    },
+  })
+
+  return mapPrediction(newPrediction)
 }
 
-export function getPredictionStats(userId: string): { total: number; correct: number; accuracy: number } {
-  const userPredictions = predictions.filter(p => p.userId === userId)
-  const completed = userPredictions.filter(p => p.isCorrect !== undefined)
-  const correct = completed.filter(p => p.isCorrect).length
-  
+/**
+ * Get all predictions for a user
+ */
+export async function getPredictionsByUser(
+  userId: string,
+  limit: number = 50
+): Promise<UserPredictionResult[]> {
+  const predictions = await prisma.userPrediction.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  })
+
+  return predictions.map(mapPrediction)
+}
+
+/**
+ * Get predictions for a specific match
+ */
+export async function getPredictionsByMatch(
+  matchId: string
+): Promise<UserPredictionResult[]> {
+  const predictions = await prisma.userPrediction.findMany({
+    where: { matchId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return predictions.map(mapPrediction)
+}
+
+/**
+ * Get a user's prediction for a specific match
+ */
+export async function getUserPredictionForMatch(
+  userId: string,
+  matchId: string
+): Promise<UserPredictionResult[]> {
+  const predictions = await prisma.userPrediction.findMany({
+    where: { userId, matchId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return predictions.map(mapPrediction)
+}
+
+/**
+ * Settle a match: evaluate all unsettled predictions against the actual score
+ */
+export async function settleMatch(
+  matchId: string,
+  homeScore: number,
+  awayScore: number
+): Promise<{ settled: number; correct: number }> {
+  // Get all unsettled predictions for this match
+  const predictions = await prisma.userPrediction.findMany({
+    where: {
+      matchId,
+      isCorrect: null,
+    },
+  })
+
+  let settled = 0
+  let correct = 0
+
+  for (const pred of predictions) {
+    let isCorrect = false
+
+    switch (pred.predictionType as PredictionType) {
+      case 'MATCH_RESULT': {
+        const actualResult =
+          homeScore > awayScore ? 'home_win' : homeScore < awayScore ? 'away_win' : 'draw'
+        isCorrect = pred.prediction === actualResult
+        break
+      }
+      case 'SCORE': {
+        isCorrect = pred.prediction === `${homeScore}-${awayScore}`
+        break
+      }
+      case 'OVER_UNDER': {
+        const total = homeScore + awayScore
+        const threshold = parseFloat(pred.prediction.split('_')[1] || '2.5')
+        const isOver = total > threshold
+        isCorrect =
+          (pred.prediction.startsWith('over') && isOver) ||
+          (pred.prediction.startsWith('under') && !isOver)
+        break
+      }
+      case 'TOTAL_GOALS': {
+        const totalGoals = homeScore + awayScore
+        isCorrect = pred.prediction === totalGoals.toString()
+        break
+      }
+    }
+
+    // Update prediction
+    await prisma.userPrediction.update({
+      where: { id: pred.id },
+      data: {
+        isCorrect,
+        settledAt: new Date(),
+      },
+    })
+
+    // Award candy if correct
+    if (isCorrect) {
+      const difficulty = pred.difficulty as 'easy' | 'medium' | 'hard'
+      await recordPredictionResult(pred.userId, true, difficulty, pred.id)
+      correct++
+    } else {
+      await recordPredictionAttempt(pred.userId)
+    }
+
+    settled++
+  }
+
+  return { settled, correct }
+}
+
+/**
+ * Get prediction stats for a user
+ */
+export async function getPredictionStats(userId: string) {
+  const predictions = await prisma.userPrediction.findMany({
+    where: { userId },
+  })
+
+  const completed = predictions.filter(p => p.isCorrect !== null)
+  const correct = completed.filter(p => p.isCorrect === true).length
+
   return {
-    total: userPredictions.length,
+    total: predictions.length,
+    settled: completed.length,
     correct,
-    accuracy: completed.length > 0 ? Math.round((correct / completed.length) * 100) : 0
+    pending: predictions.length - completed.length,
+    accuracy:
+      completed.length > 0
+        ? Math.round((correct / completed.length) * 100)
+        : 0,
+  }
+}
+
+/**
+ * Get recent predictions across all users (for activity feed)
+ */
+export async function getRecentPredictions(limit: number = 20) {
+  const predictions = await prisma.userPrediction.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: {
+      user: {
+        select: { name: true, role: true },
+      },
+    },
+  })
+
+  return predictions.map(p => ({
+    id: p.id,
+    userId: p.userId,
+    userName: p.user.name,
+    userRole: p.user.role,
+    matchId: p.matchId,
+    predictionType: p.predictionType,
+    prediction: p.prediction,
+    isCorrect: p.isCorrect,
+    createdAt: p.createdAt,
+  }))
+}
+
+// Helper to map Prisma result to our interface
+function mapPrediction(p: any): UserPredictionResult {
+  return {
+    id: p.id,
+    userId: p.userId,
+    matchId: p.matchId,
+    predictionType: p.predictionType,
+    prediction: p.prediction,
+    difficulty: p.difficulty,
+    isCorrect: p.isCorrect,
+    pointsAwarded: p.pointsAwarded,
+    settledAt: p.settledAt,
+    createdAt: p.createdAt,
   }
 }

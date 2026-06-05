@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface LeaderboardEntry {
   userId: string
@@ -15,6 +16,7 @@ interface LeaderboardEntry {
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const { t } = useI18n()
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -44,11 +46,11 @@ export default function Leaderboard() {
   return (
     <div className="bg-black/50 border border-slate-800 rounded-xl p-6">
       <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <span>🏆</span> User Leaderboard
+        <span>🏆</span> {t('ui.userLeaderboard')}
       </h3>
       
       {leaderboard.length === 0 ? (
-        <p className="text-slate-500 text-center py-4">No users yet</p>
+        <p className="text-slate-500 text-center py-4">{t('ui.noUsersYet')}</p>
       ) : (
         <div className="space-y-2">
           {leaderboard.slice(0, 10).map((user, index) => {
@@ -77,12 +79,12 @@ export default function Leaderboard() {
                     <span className="text-white font-medium">{user.name}</span>
                     {user.role === 'master' && (
                       <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">
-                        MASTER
+                        {t('ui.masterBadge')}
                       </span>
                     )}
                   </div>
                   <div className="text-xs text-slate-500">
-                    {user.totalPredictions} predictions · {accuracy}% accuracy
+                    {user.totalPredictions} {t('ui.predictionsLabel')} · {accuracy}% {t('ui.accuracyLabel2')}
                   </div>
                 </div>
                 

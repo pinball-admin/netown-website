@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -15,10 +16,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const { login } = useAuth()
+  const { t } = useI18n()
 
   const handleSendCode = async () => {
     if (!email || !email.includes('@')) {
-      setMessage('Please enter a valid email')
+      setMessage(t('login.invalidEmail'))
       return
     }
 
@@ -33,12 +35,18 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       const result = await response.json()
       if (result.success) {
         setStep('code')
-        setMessage('Verification code sent to your email')
+        // Dev mode: auto-fill code if returned
+        if (result.devCode) {
+          setCode(result.devCode)
+          setMessage(`✅ DEV MODE - Code: ${result.devCode}`)
+        } else {
+          setMessage(t('login.codeSent'))
+        }
       } else {
         setMessage(result.message)
       }
     } catch (error) {
-      setMessage('Failed to send code')
+      setMessage(t('login.sendFailed'))
     } finally {
       setLoading(false)
     }
@@ -46,7 +54,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   const handleLogin = async () => {
     if (!code || code.length !== 6) {
-      setMessage('Please enter a 6-digit verification code')
+      setMessage(t('login.invalidCode'))
       return
     }
 
@@ -66,7 +74,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setMessage(result.message)
       }
     } catch (error) {
-      setMessage('Login failed')
+      setMessage(t('login.loginFailed'))
     } finally {
       setLoading(false)
     }
@@ -99,11 +107,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </button>
 
         <h2 className="text-2xl font-bold text-white mb-6 text-center">
-          {step === 'email' ? 'Get Started' : 'Verify Email'}
+          {step === 'email' ? t('login.getStarted') : t('login.verifyEmail')}
         </h2>
 
         {message && (
-          <div className={`text-sm mb-4 text-center ${message.includes('success') || message.includes('sent') ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`text-sm mb-4 text-center ${
+            message.includes('success') || message.includes('sent') || message.includes('DEV') 
+              ? 'text-green-400' 
+              : 'text-red-400'
+          }`}>
             {message}
           </div>
         )}
@@ -111,7 +123,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         {step === 'email' ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-slate-400 mb-2">Email Address</label>
+              <label className="block text-sm text-slate-400 mb-2">{t('login.emailLabel')}</label>
               <input
                 type="email"
                 value={email}
@@ -126,13 +138,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               disabled={loading}
               className="w-full py-3 bg-[#00FF66] text-black font-bold rounded-xl hover:bg-[#00FF66]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Sending...' : 'Send Verification Code'}
+              {loading ? t('login.sending') : t('login.sendCode')}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-slate-400 mb-2">Verification Code</label>
+              <label className="block text-sm text-slate-400 mb-2">{t('login.codeLabel')}</label>
               <input
                 type="text"
                 value={code}
@@ -149,7 +161,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               disabled={loading}
               className="w-full py-3 bg-[#00FF66] text-black font-bold rounded-xl hover:bg-[#00FF66]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Verifying...' : 'Login / Register'}
+              {loading ? t('login.verifying') : t('login.loginRegister')}
             </button>
             <button
               onClick={() => {
@@ -159,13 +171,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               }}
               className="w-full py-3 text-slate-400 hover:text-white transition-colors"
             >
-              Change Email
+              {t('login.changeEmail')}
             </button>
           </div>
         )}
 
         <div className="mt-6 text-center text-xs text-slate-500">
-          By logging in, you agree to our Terms of Service and Privacy Policy
+          {t('login.termsNotice')}
         </div>
       </div>
     </div>

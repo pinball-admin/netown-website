@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useI18n } from '@/contexts/I18nContext'
 import { getUpcomingMatches, createPrediction } from '@/libs/prediction/user-predictions'
 
 interface UserPredictionFormProps {
@@ -8,6 +9,7 @@ interface UserPredictionFormProps {
 }
 
 export default function UserPredictionForm({ userId }: UserPredictionFormProps) {
+  const { t } = useI18n()
   const [matches, setMatches] = useState<any[]>([])
   const [selectedMatch, setSelectedMatch] = useState('')
   const [predictionType, setPredictionType] = useState<'match_result' | 'score' | 'over_under' | 'total_goals'>('match_result')
@@ -64,7 +66,7 @@ export default function UserPredictionForm({ userId }: UserPredictionFormProps) 
   return (
     <div className="bg-black/50 border border-slate-800 rounded-xl p-6">
       <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <span>⚽</span> Make Your Prediction
+        <span>⚽</span> {t('ui.makeYourPrediction')}
       </h3>
 
       {message && (
@@ -75,13 +77,13 @@ export default function UserPredictionForm({ userId }: UserPredictionFormProps) 
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-slate-400 mb-2">Select Match</label>
+          <label className="block text-sm text-slate-400 mb-2">{t('prediction.selectMatch')}</label>
           <select
             value={selectedMatch}
             onChange={(e) => setSelectedMatch(e.target.value)}
             className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-xl text-white focus:border-[#00FF66] focus:outline-none transition-colors"
           >
-            <option value="">Choose a match...</option>
+            <option value="">{t('prediction.chooseMatch')}</option>
             {matches.map((match) => (
               <option key={match.id} value={match.id}>
                 {match.homeTeam} vs {match.awayTeam} - {formatDate(match.startTime)}
@@ -91,13 +93,13 @@ export default function UserPredictionForm({ userId }: UserPredictionFormProps) 
         </div>
 
         <div>
-          <label className="block text-sm text-slate-400 mb-2">Prediction Type</label>
+          <label className="block text-sm text-slate-400 mb-2">{t('prediction.predictionType')}</label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
-              { value: 'match_result', label: 'Result', difficulty: 'Easy' },
-              { value: 'over_under', label: 'Over/Under', difficulty: 'Medium' },
-              { value: 'total_goals', label: 'Total Goals', difficulty: 'Hard' },
-              { value: 'score', label: 'Exact Score', difficulty: 'Hard' },
+              { value: 'match_result', label: t('prediction.result'), difficulty: t('prediction.easy') },
+              { value: 'over_under', label: t('prediction.overUnder'), difficulty: t('prediction.medium') },
+              { value: 'total_goals', label: t('prediction.totalGoals'), difficulty: t('prediction.hard') },
+              { value: 'score', label: t('prediction.exactScore'), difficulty: t('prediction.hard') },
             ].map((type) => (
               <button
                 key={type.value}
@@ -116,7 +118,7 @@ export default function UserPredictionForm({ userId }: UserPredictionFormProps) 
         </div>
 
         <div>
-          <label className="block text-sm text-slate-400 mb-2">Your Prediction</label>
+          <label className="block text-sm text-slate-400 mb-2">{t('prediction.yourPrediction')}</label>
           {predictionType === 'match_result' ? (
             <div className="grid grid-cols-3 gap-2">
               {['win', 'draw', 'loss'].map((result) => (

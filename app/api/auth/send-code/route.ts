@@ -40,10 +40,29 @@ export async function POST(request: Request) {
 
     if (!emailResult.success) {
       console.error('[AUTH] Failed to send email:', emailResult.error)
+      
+      // In development mode, return the code so dev can use it
+      if (process.env.NODE_ENV === 'development') {
+        return NextResponse.json({
+          success: true,
+          devCode: code,
+          message: 'DEV MODE: Check server console for verification code',
+        })
+      }
+      
       return NextResponse.json(
         { success: false, message: 'Failed to send verification email. Please try again later.' },
         { status: 500 }
       )
+    }
+    
+    // In development mode with devMode flag, also return the code
+    if (process.env.NODE_ENV === 'development' && emailResult.devMode) {
+      return NextResponse.json({
+        success: true,
+        devCode: code,
+        message: 'DEV MODE: Check server console for verification code',
+      })
     }
 
     return NextResponse.json({

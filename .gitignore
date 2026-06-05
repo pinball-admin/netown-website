@@ -8,6 +8,8 @@ yarn-error.log*
 .next/
 out/
 dist/
+*.tsbuildinfo
+next-env.d.ts
 
 # IDE
 .vscode/
@@ -27,4 +29,8 @@ Thumbs.db
 # Logs
 logs/
 *.log
+*.db
+*.db-journal
 /app/generated/prisma
+.vercel
+.vercel-tmp/

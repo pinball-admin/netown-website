@@ -9,7 +9,7 @@ interface TeamsPageContentProps {
   allTeams: Team[]
 }
 
-const GROUP_LETTERS = 'ABCDEFGH'.split('')
+const GROUP_LETTERS = 'ABCDEFGHIJKL'.split('')
 
 export default function TeamsPageContent({ allTeams }: TeamsPageContentProps) {
   const { t, tTeam } = useI18n()

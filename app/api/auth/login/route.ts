@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { generateToken } from '@/libs/auth/jwt'
 import { prisma } from '@/libs/prisma/client'
+import { createTransaction } from '@/libs/candy/ledger'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -79,14 +80,19 @@ export async function POST(request: Request) {
           candyBalance: 100,
           isVerified: true,
           predictionUnlockUntil: new Date(Date.now() + 48 * 60 * 60 * 1000),
+          lastLoginDate: new Date().toISOString().split('T')[0],
         },
       })
       console.log(`[AUTH] New user registered: ${email}`)
+
+      // Award signup bonus candy
+      await createTransaction(user.id, 'SIGNUP', 100, 'Welcome bonus for new user')
     } else {
       user = await prisma.user.update({
         where: { email },
         data: {
           lastLoginAt: new Date(),
+          lastLoginDate: new Date().toISOString().split('T')[0],
           predictionUnlockUntil: new Date(Date.now() + 48 * 60 * 60 * 1000),
         },
       })

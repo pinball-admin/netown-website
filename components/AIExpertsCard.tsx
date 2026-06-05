@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { EXPERT_IDS, ExpertId } from '@/libs/types'
 import { generateExpertPredictions } from '@/libs/prediction/ml-model'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface AIExpertsCardProps {
   matchId: string
@@ -19,6 +20,7 @@ const EXPERT_INFO: Record<ExpertId, { name: string; avatar: string; specialty: s
 }
 
 export default function AIExpertsCard({ matchId, homeTeam, awayTeam }: AIExpertsCardProps) {
+  const { t } = useI18n()
   const [predictions, setPredictions] = useState<Record<ExpertId, any> | null>(null)
   const [loading, setLoading] = useState(false)
   const [showAll, setShowAll] = useState(false)
@@ -68,14 +70,14 @@ export default function AIExpertsCard({ matchId, homeTeam, awayTeam }: AIExperts
               {pred ? (
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Prediction:</span>
+                    <span className="text-slate-400">{t('ai.prediction')}:</span>
                     <span className="font-semibold">
                       {pred.predictedWinner === 'home' ? `${homeTeam} Win` :
                        pred.predictedWinner === 'away' ? `${awayTeam} Win` : 'Draw'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Score:</span>
+                    <span className="text-slate-400">{t('ai.score')}:</span>
                     <span className="font-semibold">{pred.predictedScore.home}-{pred.predictedScore.away}</span>
                   </div>
                   <div className="flex justify-between">
@@ -85,13 +87,13 @@ export default function AIExpertsCard({ matchId, homeTeam, awayTeam }: AIExperts
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Confidence:</span>
+                    <span className="text-slate-400">{t('ai.confidence')}:</span>
                     <span className="text-amber-400 font-semibold">{pred.confidence}%</span>
                   </div>
                 </div>
               ) : (
                 <div className="text-slate-500 text-sm text-center py-4">
-                  Click generate to see prediction
+                  {t('ai.clickGenerate')}
                 </div>
               )}
             </div>
@@ -106,7 +108,7 @@ export default function AIExpertsCard({ matchId, homeTeam, awayTeam }: AIExperts
             disabled={loading}
             className="bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold px-6 py-3 rounded-full hover:from-amber-400 hover:to-orange-400 transition-all disabled:opacity-50"
           >
-            {loading ? '🔮 Analyzing...' : '🔮 Get AI Predictions'}
+            {loading ? t('ai.analyzing') : t('ai.getPredictions')}
           </button>
         )}
 
@@ -115,7 +117,7 @@ export default function AIExpertsCard({ matchId, homeTeam, awayTeam }: AIExperts
             onClick={() => setShowAll(!showAll)}
             className="text-amber-400 hover:text-amber-300 transition-colors"
           >
-            {showAll ? 'Show Less' : `Show All 5 Experts (${EXPERT_IDS.length})`}
+            {showAll ? t('ai.showLess') : t('ai.showAllExperts')}
           </button>
         )}
       </div>
@@ -123,8 +125,8 @@ export default function AIExpertsCard({ matchId, homeTeam, awayTeam }: AIExperts
       {predictions && (
         <div className="mt-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700">
           <p className="text-slate-400 text-sm text-center">
-            💡 <strong className="text-amber-400">Pro Tip:</strong> Our AI experts use ELO rating system and historical H2H data
-            to generate predictions. <span className="text-emerald-400">Follow the consensus for higher win rates!</span>
+            💡 <strong className="text-amber-400">{t('ai.proTip')}</strong>
+            <span className="text-emerald-400">{t('ai.followConsensus')}</span>
           </p>
         </div>
       )}

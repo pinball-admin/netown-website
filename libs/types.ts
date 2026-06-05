@@ -62,10 +62,16 @@ export interface Prediction {
   matchId: string
   predictedWinner: 'home' | 'draw' | 'away'
   predictedScore: { home: number; away: number }
+  predictedHalfTime?: { home: number; away: number }
   predictedOverUnder: 'over' | 'under'
   overUnderLine: number
   confidence: number
   reasoning: string
+  homeWinProb?: number
+  drawProb?: number
+  awayWinProb?: number
+  bothTeamsScoreProb?: number
+  goalDistribution?: { goals: number; probability: number }[]
 }
 
 export interface ExpertStats {

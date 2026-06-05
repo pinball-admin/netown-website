@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface Post {
   id: string | number
@@ -20,9 +21,9 @@ interface Post {
 
 // Pure football images only - no basketball or dead links!
 const FOOTBALL_IMAGES = [
-  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=400',
-  'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400',
-  'https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=400',
+  'https://images.unsplash.com/photo-1489944440615?w=400',
+  'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400',
+  'https://images.unsplash.com/photo-1431324155629?w=400',
   'https://images.unsplash.com/photo-1522778114943-52418b61a052?w=400',
   'https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=400',
 ]
@@ -31,112 +32,113 @@ const getRandomImage = () => {
   return FOOTBALL_IMAGES[Math.floor(Math.random() * FOOTBALL_IMAGES.length)]
 }
 
-// Mock data - pure football content only!
-const MOCK_POSTS: Post[] = [
-  {
-    id: 1,
-    author: 'MessiFanArgentina',
-    avatar: '🔵',
-    country: '🇦🇷',
-    content: 'USA vs Morocco opening match analysis: Pulisic is the key. His Chelsea form resurrection this season has been incredible. If he stays fit, USA goes through from Group A. The home advantage cannot be underestimated!',
-    imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800',
-    likes: 234,
-    comments: 45,
-    time: '2h ago',
-    isHot: true,
-    isPinned: true,
-    tags: ['USA', 'Morocco', 'Analysis'],
-  },
-  {
-    id: 2,
-    author: 'CroatiaWizard',
-    avatar: '🔴',
-    country: '🇭🇷',
-    content: 'Modric at 41 still running the show! His partnership with Kovacic and Brozovic is the heartbeat of this team. Nigeria better watch out - Croatia midfield control is UNREAL.',
-    imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800',
-    likes: 189,
-    comments: 32,
-    time: '3h ago',
-    isHot: true,
-    tags: ['Croatia', 'Modric', 'Midfield'],
-  },
-  {
-    id: 3,
-    author: 'BrazilianSambaKing',
-    avatar: '💛',
-    country: '🇧🇷',
-    content: 'Neymar ALONE is worth the ticket price! His final World Cup - the entire Brazil is behind him. 2026 is HIS tournament. Prediction: 8 goals minimum!',
-    imageUrl: 'https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=800',
-    likes: 567,
-    comments: 89,
-    time: '4h ago',
-    isHot: true,
-    tags: ['Brazil', 'Neymar', 'Prediction'],
-  },
-  {
-    id: 4,
-    author: 'EnglandHoper2026',
-    avatar: '⚽',
-    country: '🏴',
-    content: 'Southgate OUT! Kane needs proper service. 2022 penalty heartbreak cannot happen again. Our golden generation deserves a trophy!',
-    imageUrl: 'https://images.unsplash.com/photo-1522778114943-52418b61a052?w=800',
-    likes: 345,
-    comments: 67,
-    time: '5h ago',
-    isHot: true,
-    tags: ['England', 'Kane', 'Analysis'],
-  },
-  {
-    id: 5,
-    author: 'FranceUltraMbappe',
-    avatar: '💙',
-    country: '🇫🇷',
-    content: 'Mbappe 2026 = Ronaldo 2002 zone! Euro 2024 humiliation → World Cup glory transformation. France dark horse? NO! France is the FAVORITE.',
-    imageUrl: 'https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=800',
-    likes: 456,
-    comments: 78,
-    time: '6h ago',
-    isHot: true,
-    tags: ['France', 'Mbappe', 'Favorites'],
-  },
-  {
-    id: 6,
-    author: 'GermanyTechExpert',
-    avatar: '⚫',
-    country: '🇩🇪',
-    content: 'Nagelsmann tactical revolution fascinating! Wirtz false-9 hybrid, Musiala gravity creation, Havertz movement... Germany WC2022 trauma fuel → 2026 CHAMPIONS!',
-    imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=400',
-    likes: 298,
-    comments: 41,
-    time: '7h ago',
-    tags: ['Germany', 'Nagelsmann', 'Tactics'],
-  },
-  {
-    id: 7,
-    author: 'MoroccoAtlasLion',
-    avatar: '🟢',
-    country: '🇲🇦',
-    content: 'Hakimi Inter teammates revenge motivation! Amrabat return = defensive excellence. 2022 semi-final inspiration carries forward. AFRICA RISING!',
-    imageUrl: 'https://images.unsplash.com/photo-1522778114943-52418b61a052?w=400',
-    likes: 312,
-    comments: 55,
-    time: '8h ago',
-    isHot: true,
-    tags: ['Morocco', 'Hakimi', 'Africa'],
-  },
-  {
-    id: 8,
-    author: 'JapanBundesligaFan',
-    avatar: '🔴',
-    country: '🇯🇵',
-    content: 'Kubo + Oiyma La Masia synthesis UNSTOPPABLE! 8 Japan players in Bundesliga = tactical preparation sophistication.',
-    imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400',
-    likes: 187,
-    comments: 29,
-    time: '9h ago',
-    tags: ['Japan', 'Kubo', 'Bundesliga'],
-  },
-]
+function getMockPosts(t: (key: string) => string): Post[] {
+  return [
+    {
+      id: 1,
+      author: t('ui.mockAuthor1'),
+      avatar: '🔵',
+      country: '🇦🇷',
+      content: t('ui.mockPost1'),
+      imageUrl: FOOTBALL_IMAGES[0],
+      likes: 234,
+      comments: 45,
+      time: `2${t('ui.hAgo')}`,
+      isHot: true,
+      isPinned: true,
+      tags: [t('ui.mockTag1a'), t('ui.mockTag1b'), t('ui.mockTag1c')],
+    },
+    {
+      id: 2,
+      author: t('ui.mockAuthor2'),
+      avatar: '🔴',
+      country: '🇭🇷',
+      content: t('ui.mockPost2'),
+      imageUrl: FOOTBALL_IMAGES[1],
+      likes: 189,
+      comments: 32,
+      time: `3${t('ui.hAgo')}`,
+      isHot: true,
+      tags: [t('ui.mockTag2a'), t('ui.mockTag2b'), t('ui.mockTag2c')],
+    },
+    {
+      id: 3,
+      author: t('ui.mockAuthor3'),
+      avatar: '💛',
+      country: '🇧🇷',
+      content: t('ui.mockPost3'),
+      imageUrl: FOOTBALL_IMAGES[2],
+      likes: 567,
+      comments: 89,
+      time: `4${t('ui.hAgo')}`,
+      isHot: true,
+      tags: [t('ui.mockTag3a'), t('ui.mockTag3b'), t('ui.mockTag3c')],
+    },
+    {
+      id: 4,
+      author: t('ui.mockAuthor4'),
+      avatar: '⚽',
+      country: '🏴',
+      content: t('ui.mockPost4'),
+      imageUrl: FOOTBALL_IMAGES[3],
+      likes: 345,
+      comments: 67,
+      time: `5${t('ui.hAgo')}`,
+      isHot: true,
+      tags: [t('ui.mockTag4a'), t('ui.mockTag4b'), t('ui.mockTag4c')],
+    },
+    {
+      id: 5,
+      author: t('ui.mockAuthor5'),
+      avatar: '💙',
+      country: '🇫🇷',
+      content: t('ui.mockPost5'),
+      imageUrl: FOOTBALL_IMAGES[4],
+      likes: 456,
+      comments: 78,
+      time: `6${t('ui.hAgo')}`,
+      isHot: true,
+      tags: [t('ui.mockTag5a'), t('ui.mockTag5b'), t('ui.mockTag5c')],
+    },
+    {
+      id: 6,
+      author: t('ui.mockAuthor6'),
+      avatar: '⚫',
+      country: '🇩🇪',
+      content: t('ui.mockPost6'),
+      imageUrl: FOOTBALL_IMAGES[0],
+      likes: 298,
+      comments: 41,
+      time: `7${t('ui.hAgo')}`,
+      tags: [t('ui.mockTag6a'), t('ui.mockTag6b'), t('ui.mockTag6c')],
+    },
+    {
+      id: 7,
+      author: t('ui.mockAuthor7'),
+      avatar: '🟢',
+      country: '🇲🇦',
+      content: t('ui.mockPost7'),
+      imageUrl: FOOTBALL_IMAGES[3],
+      likes: 312,
+      comments: 55,
+      time: `8${t('ui.hAgo')}`,
+      isHot: true,
+      tags: [t('ui.mockTag7a'), t('ui.mockTag7b'), t('ui.mockTag7c')],
+    },
+    {
+      id: 8,
+      author: t('ui.mockAuthor8'),
+      avatar: '🔴',
+      country: '🇯🇵',
+      content: t('ui.mockPost8'),
+      imageUrl: FOOTBALL_IMAGES[1],
+      likes: 187,
+      comments: 29,
+      time: `9${t('ui.hAgo')}`,
+      tags: [t('ui.mockTag8a'), t('ui.mockTag8b'), t('ui.mockTag8c')],
+    },
+  ]
+}
 
 export default function CommunityForum() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -144,6 +146,7 @@ export default function CommunityForum() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const { user, isAuthenticated } = useAuth()
+  const { t } = useI18n()
 
   useEffect(() => {
     fetchPosts()
@@ -169,11 +172,11 @@ export default function CommunityForum() {
         }))
         setPosts(dbPosts)
       } else {
-        setPosts(MOCK_POSTS)
+        setPosts(getMockPosts(t))
       }
     } catch (error) {
       console.error('Failed to fetch posts:', error)
-      setPosts(MOCK_POSTS)
+      setPosts(getMockPosts(t))
     }
   }
 
@@ -185,10 +188,10 @@ export default function CommunityForum() {
     const diffHours = Math.floor(diffMins / 60)
     const diffDays = Math.floor(diffHours / 24)
 
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
+    if (diffMins < 1) return t('ui.justNow')
+    if (diffMins < 60) return `${diffMins}${t('ui.mAgo')}`
+    if (diffHours < 24) return `${diffHours}${t('ui.hAgo')}`
+    if (diffDays < 7) return `${diffDays}${t('ui.dAgo')}`
     return date.toLocaleDateString()
   }
 
@@ -239,7 +242,7 @@ export default function CommunityForum() {
     <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
       <h2 className="text-lg font-semibold bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent mb-4 flex items-center gap-2">
         <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
-        🔥 Community Forum
+        🔥 {t('ui.communityForum')}
       </h2>
 
       {/* Post Creation Box */}
@@ -248,7 +251,7 @@ export default function CommunityForum() {
           <textarea
             value={newPostContent}
             onChange={(e) => setNewPostContent(e.target.value)}
-            placeholder="Share your thoughts on World Cup 2026..."
+            placeholder={t('ui.shareWorldCup')}
             className="w-full bg-transparent text-slate-300 text-sm placeholder-slate-500 resize-none focus:outline-none mb-3 min-h-[60px]"
             rows={3}
           />
@@ -261,12 +264,12 @@ export default function CommunityForum() {
               disabled={!newPostContent.trim() || isSubmitting}
               className="px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-semibold rounded-lg hover:from-orange-400 hover:to-pink-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Posting...' : '发布'}
+              {isSubmitting ? t('ui.posting') : t('ui.publish')}
             </button>
           </div>
           {showSuccess && (
             <div className="mt-2 text-xs text-emerald-400 flex items-center gap-1">
-              <span>✓</span> Post published successfully!
+              <span>✓</span> {t('ui.postPublished')}
             </div>
           )}
         </div>
@@ -297,12 +300,12 @@ export default function CommunityForum() {
                   <span>{post.country}</span>
                   {post.isHot && (
                     <span className="text-xs bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full">
-                      🔥 HOT
+                      🔥 {t('ui.hot')}
                     </span>
                   )}
                   {post.isPinned && (
                     <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">
-                      📌 Pinned
+                      📌 {t('ui.pinned')}
                     </span>
                   )}
                 </div>
@@ -316,7 +319,7 @@ export default function CommunityForum() {
               <div className="mb-2 rounded-lg overflow-hidden">
                 <img
                   src={post.imageUrl}
-                  alt="Football action"
+                  alt={t('ui.footballAction')}
                   className="w-full h-28 object-cover"
                 />
               </div>
@@ -348,7 +351,7 @@ export default function CommunityForum() {
 
       <div className="mt-3 pt-3 border-t border-slate-700/50">
         <button className="w-full py-2 bg-gradient-to-r from-orange-500/20 to-pink-500/20 border border-orange-500/30 rounded-lg text-orange-400 text-xs font-medium hover:from-orange-500/30 hover:to-pink-500/30 transition-all">
-          View All {posts.length}+ Discussions →
+          {t('ui.viewAllDiscussions', { count: posts.length })}
         </button>
       </div>
     </div>

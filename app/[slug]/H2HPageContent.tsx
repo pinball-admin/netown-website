@@ -86,7 +86,7 @@ export default function H2HPageContent({ homeTeam, awayTeam }: H2HPageContentPro
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-white mb-2">{h2hStats.totalMatches}</div>
-                <div className="text-slate-400 text-sm">Total Matches</div>
+                <div className="text-slate-400 text-sm">{t('h2h.totalMatches')}</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-emerald-400 mb-2">{h2hStats.homeWins}</div>
@@ -94,7 +94,7 @@ export default function H2HPageContent({ homeTeam, awayTeam }: H2HPageContentPro
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-amber-400 mb-2">{h2hStats.draws}</div>
-                <div className="text-slate-400 text-sm">Draws</div>
+                <div className="text-slate-400 text-sm">{t('h2h.draws')}</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-red-400 mb-2">{h2hStats.awayWins}</div>
@@ -106,7 +106,7 @@ export default function H2HPageContent({ homeTeam, awayTeam }: H2HPageContentPro
                 <span className="text-emerald-400">{h2hStats.homeGoals}</span>
                 <span className="text-slate-500 mx-2">-</span>
                 <span className="text-red-400">{h2hStats.awayGoals}</span>
-                <span className="text-slate-400 text-sm ml-2">Goals</span>
+                <span className="text-slate-400 text-sm ml-2">{t('h2h.goals')}</span>
               </div>
             </div>
           </div>

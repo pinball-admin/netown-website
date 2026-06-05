@@ -224,21 +224,48 @@ export class EloPredictionModel {
     draw: number
     awayWin: number
     predictedScore: { home: number; away: number }
+    halfTimeScore: { home: number; away: number }
     over: number
     under: number
+    goalDistribution: { goals: number; probability: number }[]
+    bothTeamsScore: number
   } {
     const features = this.extractFeatures(match)
     const outcome = this.predictOutcome(features)
     const score = this.predictScore(features)
+
+    // Half-time prediction: ~40% of goals in first half
+    const htHome = Math.round(score.home * 0.4)
+    const htAway = Math.round(score.away * 0.4)
+
+    // Goal distribution using Poisson
+    const expectedTotal = score.home + score.away + 0.5
+    const goalDistribution = []
+    for (let g = 0; g <= 6; g++) {
+      const prob = Math.exp(-expectedTotal) * Math.pow(expectedTotal, g) / this.factorial(g)
+      goalDistribution.push({ goals: g, probability: Math.round(prob * 100) })
+    }
+
+    // Both teams to score probability
+    const homeScoreProb = 1 - Math.exp(-(score.home + 0.3))
+    const awayScoreProb = 1 - Math.exp(-(score.away + 0.3))
+    const bothTeamsScore = Math.round(homeScoreProb * awayScoreProb * 100)
 
     return {
       homeWin: Math.round(outcome.homeWin * 100),
       draw: Math.round(outcome.draw * 100),
       awayWin: Math.round(outcome.awayWin * 100),
       predictedScore: score,
+      halfTimeScore: { home: htHome, away: htAway },
       over: Math.round(features.overChance * 100),
       under: Math.round(features.underChance * 100),
+      goalDistribution,
+      bothTeamsScore: Math.min(90, Math.max(10, bothTeamsScore)),
     }
+  }
+
+  private factorial(n: number): number {
+    return n <= 1 ? 1 : n * this.factorial(n - 1)
   }
 }
 
@@ -296,10 +323,16 @@ export function generateExpertPredictions(match: Match): Record<ExpertId, Predic
       expertId,
       predictedWinner,
       predictedScore: { home: predictedHomeGoals, away: predictedAwayGoals },
+      predictedHalfTime: basePrediction.halfTimeScore,
       predictedOverUnder,
       overUnderLine: 2.5,
       confidence: Math.max(50, Math.min(95, Math.max(homeWin, draw, awayWin) + Math.round(Math.random() * 10))),
       reasoning: generateReasoning(expertId, match, homeWin, draw, awayWin, predictedHomeGoals, predictedAwayGoals, over),
+      homeWinProb: homeWin,
+      drawProb: draw,
+      awayWinProb: awayWin,
+      bothTeamsScoreProb: basePrediction.bothTeamsScore,
+      goalDistribution: basePrediction.goalDistribution,
     }
   })
 

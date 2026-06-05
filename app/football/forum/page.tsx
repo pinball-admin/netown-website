@@ -5,15 +5,16 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
 import ComplianceNotice from '@/components/football/ComplianceNotice'
-import LanguageSwitcher from '@/components/football/LanguageSwitcher'
-import ConnectWalletButton from '@/components/football/ConnectWalletButton'
 import DynamicAdBanner from '@/components/football/DynamicAdBanner'
+import MasterUpgradeWidget from '@/components/football/MasterUpgradeWidget'
+import FootballTopBar from '@/components/football/FootballTopBar'
+import MobileBottomNav from '@/components/football/MobileBottomNav'
 
 // Pure football images only!
 const FOOTBALL_IMAGES = [
-  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800',
+  'https://images.unsplash.com/photo-1489944440615?w=800',
   'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800',
-  'https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=800',
+  'https://images.unsplash.com/photo-1431324155629?w=800',
   'https://images.unsplash.com/photo-1522778114943-52418b61a052?w=800',
   'https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=800',
 ]
@@ -43,13 +44,14 @@ interface Post {
   tags: string[]
   isMasterPost?: boolean
   masterName?: string
+  isAIOracle?: boolean
 }
 
 // Mock data for master posts and initial posts
 const INITIAL_POSTS: Post[] = [
-  { id: 'master-1', author: 'AI Expert Team', avatar: '🤖', country: '🌍', content: 'Bayesian model leverages P=0.72 for home advantage. Pulisic creativity vs Hakimi speed on the flanks - expect USA to exploit wide areas with precision crosses to Sargent. Morocco set-piece vulnerability (12% conceded from corners in qualifiers) could be decisive.', imageUrl: FOOTBALL_IMAGES[0], likes: 234, comments: 45, time: '2h ago', isHot: true, isPinned: true, tags: ['USA', 'Morocco', 'Analysis'], isMasterPost: true, masterName: 'Beckham Chen' },
-  { id: 'master-2', author: 'AI Expert Team', avatar: '🤖', country: '🌍', content: 'Modric at 41 still running the show! His partnership with Kovacic and Brozovic is the heartbeat of this team. Nigeria better watch out - Croatia midfield control is UNREAL. Modric worldie probability spikes to 23% when space exists.', imageUrl: FOOTBALL_IMAGES[1], likes: 189, comments: 32, time: '3h ago', isHot: true, tags: ['Croatia', 'Modric', 'Midfield'], isMasterPost: true, masterName: 'Zidane Gao' },
-  { id: 'master-3', author: 'AI Expert Team', avatar: '🤖', country: '🌍', content: 'Neymar ALONE is worth the ticket price! His final World Cup - the entire Brazil is behind him. 2026 is HIS tournament. Prediction: 8 goals minimum! Samba style replication in Europe - Brazil attacking football will terrify opponents.', imageUrl: FOOTBALL_IMAGES[2], likes: 567, comments: 89, time: '4h ago', isHot: true, tags: ['Brazil', 'Neymar', 'Prediction'], isMasterPost: true, masterName: 'Batistuta Zhang' },
+  { id: 'master-beckham_chen', author: 'AI Expert Team', avatar: '🤖', country: '🌍', content: 'Bayesian model leverages P=0.72 for home advantage. Pulisic creativity vs Hakimi speed on the flanks - expect USA to exploit wide areas with precision crosses to Sargent. Morocco set-piece vulnerability (12% conceded from corners in qualifiers) could be decisive.', imageUrl: FOOTBALL_IMAGES[0], likes: 234, comments: 45, time: '2h ago', isHot: true, isPinned: true, tags: ['USA', 'Morocco', 'Analysis'], isMasterPost: true, masterName: 'Beckham Chen' },
+  { id: 'master-zidane_gao', author: 'AI Expert Team', avatar: '🤖', country: '🌍', content: 'Modric at 41 still running the show! His partnership with Kovacic and Brozovic is the heartbeat of this team. Nigeria better watch out - Croatia midfield control is UNREAL. Modric worldie probability spikes to 23% when space exists.', imageUrl: FOOTBALL_IMAGES[1], likes: 189, comments: 32, time: '3h ago', isHot: true, tags: ['Croatia', 'Modric', 'Midfield'], isMasterPost: true, masterName: 'Zidane Gao' },
+  { id: 'master-batistuta_zhang', author: 'AI Expert Team', avatar: '🤖', country: '🌍', content: 'Neymar ALONE is worth the ticket price! His final World Cup - the entire Brazil is behind him. 2026 is HIS tournament. Prediction: 8 goals minimum! Samba style replication in Europe - Brazil attacking football will terrify opponents.', imageUrl: FOOTBALL_IMAGES[2], likes: 567, comments: 89, time: '4h ago', isHot: true, tags: ['Brazil', 'Neymar', 'Prediction'], isMasterPost: true, masterName: 'Batistuta Zhang' },
 ]
 
 export default function ForumPage() {
@@ -64,6 +66,84 @@ export default function ForumPage() {
   const [newCommentContent, setNewCommentContent] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [showComments, setShowComments] = useState(false)
+  const [oracleTriggering, setOracleTriggering] = useState(false)
+  const [oracleResult, setOracleResult] = useState<string | null>(null)
+  const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({})
+  const [userReactions, setUserReactions] = useState<Record<string, string[]>>({})
+
+  // Fetch reactions for all posts
+  useEffect(() => {
+    if (posts.length === 0) return
+    posts.forEach((post) => {
+      fetch(`/api/forum/reaction?postId=${post.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setReactions((prev) => ({ ...prev, [post.id]: data.reactions }))
+          }
+        })
+        .catch(() => {})
+    })
+  }, [posts.length])
+
+  const handleReaction = async (postId: string, type: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!isLoggedIn) return
+
+    try {
+      const res = await fetch('/api/forum/reaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId, type }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        // Update counts
+        setReactions((prev) => {
+          const current = { ...prev }
+          if (!current[postId]) current[postId] = {}
+          const delta = data.action === 'added' ? 1 : -1
+          current[postId] = {
+            ...current[postId],
+            [type]: Math.max(0, (current[postId][type] || 0) + delta),
+          }
+          return current
+        })
+        // Track user's active reactions
+        setUserReactions((prev) => {
+          const current = prev[postId] || []
+          if (data.action === 'added') {
+            return { ...prev, [postId]: [...current, type] }
+          } else {
+            return { ...prev, [postId]: current.filter((t) => t !== type) }
+          }
+        })
+      }
+    } catch {}
+  }
+  const triggerOracle = async () => {
+    setOracleTriggering(true)
+    setOracleResult(null)
+    try {
+      const res = await fetch('/api/cron/predictions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 8, publish: true, windowHours: 72 }),
+      })
+      const json = await res.json()
+      if (json.success) {
+        setOracleResult(`✅ ${json.published} predictions published, ${json.processed} processed`)
+        // Refresh posts after a short delay
+        setTimeout(() => fetchPosts(), 2000)
+      } else {
+        setOracleResult(`❌ ${json.error || 'Failed'}`)
+      }
+    } catch {
+      setOracleResult('❌ Network error')
+    } finally {
+      setOracleTriggering(false)
+    }
+  }
 
   // Fetch posts on load
   useEffect(() => {
@@ -76,18 +156,24 @@ export default function ForumPage() {
       const data = await response.json()
       
       if (data.success && data.posts && data.posts.length > 0) {
-        const dbPosts: Post[] = data.posts.map((p: any) => ({
-          id: p.id,
-          author: p.author,
-          avatar: p.avatar || '⚽',
-          country: p.country || '🌍',
-          content: p.content,
-          imageUrl: p.imageUrl,
-          likes: p.likes || 0,
-          comments: p.comments || 0,
-          time: formatTime(p.createdAt),
-          tags: ['Discussion'],
-        }))
+        const dbPosts: Post[] = data.posts.map((p: any) => {
+          const isAIOracle = p.author === 'AI Oracle'
+          return {
+            id: p.id,
+            author: isAIOracle ? 'AI Oracle' : p.author,
+            avatar: isAIOracle ? '🤖' : (p.avatar || '⚽'),
+            country: isAIOracle ? '🌌' : (p.country || '🌍'),
+            content: p.content,
+            imageUrl: p.imageUrl,
+            likes: p.likes || 0,
+            comments: p.comments || 0,
+            time: formatTime(p.createdAt),
+            tags: isAIOracle ? ['AI Prediction', 'Match Analysis'] : ['Discussion'],
+            isMasterPost: true,
+            isAIOracle,
+            masterName: isAIOracle ? 'AI Oracle' : undefined,
+          }
+        })
         setPosts([...INITIAL_POSTS, ...dbPosts])
       } else {
         setPosts(INITIAL_POSTS)
@@ -207,7 +293,8 @@ export default function ForumPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#030712] text-slate-50 overflow-x-hidden">
+    <>
+      <div className="relative min-h-screen bg-[#030712] text-slate-50 overflow-x-hidden pb-16 md:pb-0">
       {/* Compliance Notice */}
       <ComplianceNotice />
 
@@ -215,31 +302,46 @@ export default function ForumPage() {
       <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-emerald-500/8 blur-[150px] rounded-full pointer-events-none -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-cyan-500/8 blur-[150px] rounded-full pointer-events-none translate-x-1/2 -translate-y-1/2" />
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#030712]/80 backdrop-blur-md border-b border-slate-800/50">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <Link href="/football" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-sm font-medium">Back to World Cup</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <ConnectWalletButton />
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </nav>
+      <FootballTopBar />
 
       {/* Main Content */}
       <main className="pt-20 pb-8 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
-              🔥 Football Forum
-            </h1>
-            <p className="text-slate-400 mt-2">Discuss matches, predictions, and players with fellow fans!</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
+                  🔥 {t('forum.pageTitle')}
+                </h1>
+                <p className="text-slate-400 mt-2">{t('forum.pageDesc')}</p>
+              </div>
+              {/* AI Oracle Trigger */}
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  onClick={triggerOracle}
+                  disabled={oracleTriggering}
+                  className="px-4 py-2.5 bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-500/30 rounded-xl text-violet-400 text-sm font-medium hover:from-violet-500/30 hover:to-purple-500/30 transition-all disabled:opacity-50 flex items-center gap-2"
+                  title="Generate AI predictions and publish to forum"
+                >
+                  {oracleTriggering ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <span>🔮</span> Run AI Oracle
+                    </>
+                  )}
+                </button>
+                {oracleResult && (
+                  <span className={`text-xs ${oracleResult.startsWith('✅') ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {oracleResult}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Grid Layout */}
@@ -250,7 +352,7 @@ export default function ForumPage() {
               <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
                 <h2 className="text-lg font-semibold bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent mb-4 flex items-center gap-2">
                   <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
-                  Post Your Thoughts
+                  {t('forum.postYourThoughts')}
                 </h2>
                 
                 {isLoggedIn ? (
@@ -258,7 +360,7 @@ export default function ForumPage() {
                     <textarea
                       value={newPostContent}
                       onChange={(e) => setNewPostContent(e.target.value)}
-                      placeholder="Share your World Cup opinions, predictions, or hot takes..."
+                      placeholder={t('forum.sharePlaceholder')}
                       className="w-full bg-slate-800/60 text-slate-300 placeholder-slate-500 rounded-xl p-4 border border-slate-700/60 resize-none focus:outline-none focus:border-orange-500/30 mb-4 min-h-[100px]"
                     />
                     <div className="flex items-center justify-between">
@@ -270,19 +372,19 @@ export default function ForumPage() {
                         disabled={!newPostContent.trim() || isSubmitting}
                         className="px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-lg hover:from-orange-400 hover:to-pink-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isSubmitting ? 'Posting...' : '📝 Post'}
+                        {isSubmitting ? t('forum.posting') : t('forum.post')}
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="p-6 bg-slate-800/40 rounded-xl border border-amber-500/30 text-center">
-                    <div className="text-amber-400 text-lg mb-2">🔒 Login Required</div>
-                    <p className="text-slate-400 text-sm mb-4">Please login with your email to participate in the forum discussions!</p>
+                    <div className="text-amber-400 text-lg mb-2">{t('forum.loginRequired')}</div>
+                    <p className="text-slate-400 text-sm mb-4">{t('forum.loginToParticipate')}</p>
                     <Link 
                       href="/"
                       className="px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-lg hover:from-orange-400 hover:to-pink-400 transition-all duration-300 inline-block"
                     >
-                      Go to Login
+                      {t('forum.goToLogin')}
                     </Link>
                   </div>
                 )}
@@ -293,7 +395,7 @@ export default function ForumPage() {
                 {loading ? (
                   <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-8 text-center">
                     <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-slate-400">Loading posts...</p>
+                    <p className="text-slate-400">{t('forum.loadingPosts')}</p>
                   </div>
                 ) : (
                   posts.map((post) => (
@@ -314,9 +416,10 @@ export default function ForumPage() {
                               {post.isMasterPost ? post.masterName : post.author}
                             </span>
                             <span className="text-slate-500">{post.country}</span>
-                            {post.isHot && <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">🔥 HOT</span>}
-                            {post.isPinned && <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">📌 Pinned</span>}
-                            {post.isMasterPost && <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">🤖 AI Expert</span>}
+                            {post.isHot && <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">🔥 {t('ui.hot')}</span>}
+                            {post.isPinned && <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">📌 {t('ui.pinned')}</span>}
+                            {post.isMasterPost && !post.isAIOracle && <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">{t('forum.aiExpert')}</span>}
+                            {post.isAIOracle && <span className="text-xs bg-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full">🔮 {t('forum.aiOracle')}</span>}
                           </div>
                           <span className="text-slate-500 text-xs">{post.time}</span>
                         </div>
@@ -334,22 +437,33 @@ export default function ForumPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-6 pt-3 border-t border-slate-800/60">
-                        <div className="flex items-center gap-2 text-slate-500 hover:text-pink-400 transition-colors">
-                          <span>❤️</span>
-                          <span className="text-sm font-medium">{post.likes}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-500 hover:text-cyan-400 transition-colors">
+                      <div className="flex items-center gap-4 pt-3 border-t border-slate-800/60 flex-wrap">
+                        {/* Reaction buttons */}
+                        {[
+                          { type: 'like', emoji: '❤️', label: 'Like' },
+                          { type: 'fire', emoji: '🔥', label: 'Fire' },
+                          { type: 'laugh', emoji: '😂', label: 'Haha' },
+                          { type: 'sad', emoji: '😢', label: 'Sad' },
+                        ].map((r) => {
+                          const count = reactions[post.id]?.[r.type] || 0
+                          const active = (userReactions[post.id] || []).includes(r.type)
+                          return (
+                            <button
+                              key={r.type}
+                              onClick={(e) => handleReaction(post.id, r.type, e)}
+                              className={`flex items-center gap-1 text-sm transition-all ${
+                                active ? 'scale-110' : 'text-slate-500 hover:text-slate-300'
+                              }`}
+                              title={r.label}
+                            >
+                              <span className={active ? '' : 'opacity-70'}>{r.emoji}</span>
+                              {count > 0 && <span className="text-xs font-medium text-slate-400">{count}</span>}
+                            </button>
+                          )
+                        })}
+                        <div className="flex items-center gap-2 text-slate-500 hover:text-cyan-400 transition-colors ml-auto">
                           <span>💬</span>
                           <span className="text-sm font-medium">{post.comments}</span>
-                        </div>
-                        <div className="flex-1" />
-                        <div className="flex gap-2 flex-wrap">
-                          {post.tags.map((tag) => (
-                            <span key={tag} className="text-xs bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded">
-                              {tag}
-                            </span>
-                          ))}
                         </div>
                       </div>
                     </div>
@@ -360,11 +474,13 @@ export default function ForumPage() {
 
             {/* Sidebar - 30% */}
             <div className="lg:col-span-3 space-y-6">
+              <MasterUpgradeWidget />
+
               {/* Hot Posts Sidebar */}
               <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
                 <h2 className="text-lg font-semibold bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent mb-4 flex items-center gap-2">
                   <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
-                  🔥 Hot Topics
+                  🔥 {t('forum.hotTopics')}
                 </h2>
                 <div className="space-y-3">
                   {posts.filter(p => p.isHot).slice(0, 5).map((post) => (
@@ -380,24 +496,24 @@ export default function ForumPage() {
               </div>
 
               {/* Top Banner Ad */}
-              <DynamicAdBanner teamId="forum-top" teamName="Football Forum" teamFlag="⚽" variant="side" />
+              <DynamicAdBanner teamId="forum-top" teamName="Football Forum" teamFlag="⚽" variant="inline" />
 
               {/* Quick Stats */}
               <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
                 <h2 className="text-lg font-semibold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-4">
-                  Forum Stats
+                  {t('forum.forumStats')}
                 </h2>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
-                    <span className="text-slate-400">Total Posts</span>
+                    <span className="text-slate-400">{t('forum.totalPosts')}</span>
                     <span className="text-emerald-400 font-bold">{posts.length}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
-                    <span className="text-slate-400">AI Experts</span>
+                    <span className="text-slate-400">{t('forum.aiExperts')}</span>
                     <span className="text-cyan-400 font-bold">5</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-slate-800/40 rounded-lg">
-                    <span className="text-slate-400">Hot Discussions</span>
+                    <span className="text-slate-400">{t('forum.hotDiscussions')}</span>
                     <span className="text-orange-400 font-bold">{posts.filter(p => p.isHot).length}</span>
                   </div>
                 </div>
@@ -414,7 +530,7 @@ export default function ForumPage() {
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-800 flex items-center justify-between">
               <h3 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
-                Discussion
+                {t('forum.discussion')}
               </h3>
               <button 
                 onClick={closeComments}
@@ -456,7 +572,7 @@ export default function ForumPage() {
                   <textarea
                     value={newCommentContent}
                     onChange={(e) => setNewCommentContent(e.target.value)}
-                    placeholder="Add your comment..."
+                    placeholder={t('forum.addComment')}
                     className="w-full bg-slate-800/60 text-slate-300 placeholder-slate-500 rounded-xl p-4 border border-slate-700/60 resize-none focus:outline-none focus:border-emerald-500/30 mb-3 min-h-[80px]"
                   />
                   <div className="flex justify-end">
@@ -465,13 +581,13 @@ export default function ForumPage() {
                       disabled={!newCommentContent.trim() || isSubmittingComment}
                       className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-emerald-400 hover:to-cyan-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isSubmittingComment ? 'Commenting...' : '💬 Comment'}
+                      {isSubmittingComment ? t('forum.commenting') : t('forum.comment')}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="p-4 bg-amber-500/10 rounded-lg border border-amber-500/30 text-center">
-                  <p className="text-amber-400 text-sm">🔒 Please login to comment</p>
+                  <p className="text-amber-400 text-sm">{t('forum.loginToComment')}</p>
                 </div>
               )}
             </div>
@@ -480,7 +596,7 @@ export default function ForumPage() {
             <div className="p-6 overflow-y-auto max-h-[40vh]">
               {comments.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
-                  <p>No comments yet. Be the first to comment!</p>
+                  <p>{t('forum.noCommentsYet')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -508,6 +624,8 @@ export default function ForumPage() {
         </div>
       )}
     </div>
+    <MobileBottomNav />
+    </>
   )
 }
 

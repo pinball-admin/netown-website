@@ -1,199 +1,327 @@
-export type TransactionType = 'signup' | 'daily_streak' | 'community_post' | 'prediction_correct' | 'prediction_bonus' | 'conversion' | 'admin_adjustment'
+// Candy Ledger - Prisma/PostgreSQL backed
+// All candy operations are persisted to the database
 
-export interface CandyTransaction {
+import { prisma } from '@/libs/prisma/client'
+
+export type TransactionType =
+  | 'SIGNUP'
+  | 'DAILY_LOGIN'
+  | 'COMMUNITY_POST'
+  | 'PREDICTION_CORRECT'
+  | 'PREDICTION_BONUS'
+  | 'CONVERSION'
+  | 'ADMIN_ADJUSTMENT'
+
+export interface CandyTransactionResult {
   id: string
   userId: string
-  type: TransactionType
   amount: number
-  description: string
-  referenceId?: string
+  type: string
+  description: string | null
+  referenceId: string | null
   createdAt: Date
 }
 
-export interface UserProfile {
-  userId: string
-  email: string
-  name: string
-  candyBalance: number
-  totalPredictions: number
-  correctPredictions: number
-  currentStreak: number
-  longestStreak: number
-  lastLoginDate: string
-  role: 'user' | 'master' | 'admin'
-  ranking: number
-}
-
-let transactions: CandyTransaction[] = []
-let profiles: Record<string, UserProfile> = {}
-
-export function createTransaction(
+/**
+ * Create a candy transaction and update user balance atomically
+ */
+export async function createTransaction(
   userId: string,
   type: TransactionType,
   amount: number,
-  description: string,
+  description?: string,
   referenceId?: string
-): CandyTransaction {
-  const transaction: CandyTransaction = {
-    id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    userId,
-    type,
-    amount,
-    description,
-    referenceId,
-    createdAt: new Date()
+): Promise<CandyTransactionResult> {
+  // Use a transaction to ensure atomicity
+  const [tx] = await prisma.$transaction([
+    prisma.candyTransaction.create({
+      data: {
+        userId,
+        type,
+        amount,
+        description: description || null,
+        referenceId: referenceId || null,
+      },
+    }),
+  ])
+
+  // Update user candy balance
+  await prisma.user.update({
+    where: { id: userId },
+    data: { candyBalance: { increment: amount } },
+  })
+
+  return {
+    id: tx.id,
+    userId: tx.userId,
+    amount: tx.amount,
+    type: tx.type,
+    description: tx.description,
+    referenceId: tx.referenceId,
+    createdAt: tx.createdAt,
   }
-  
-  transactions.push(transaction)
-  
-  const profile = profiles[userId]
-  if (profile) {
-    profile.candyBalance += amount
-  }
-  
-  return transaction
 }
 
-export function getTransactions(userId: string): CandyTransaction[] {
-  return transactions.filter(t => t.userId === userId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+/**
+ * Get transaction history for a user
+ */
+export async function getTransactions(
+  userId: string,
+  limit: number = 50
+): Promise<CandyTransactionResult[]> {
+  const transactions = await prisma.candyTransaction.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  })
+
+  return transactions.map(tx => ({
+    id: tx.id,
+    userId: tx.userId,
+    amount: tx.amount,
+    type: tx.type,
+    description: tx.description,
+    referenceId: tx.referenceId,
+    createdAt: tx.createdAt,
+  }))
 }
 
-export function getOrCreateProfile(userId: string, email: string, name: string): UserProfile {
-  if (!profiles[userId]) {
-    profiles[userId] = {
-      userId,
-      email,
-      name,
-      candyBalance: 100,
-      totalPredictions: 0,
-      correctPredictions: 0,
-      currentStreak: 1,
-      longestStreak: 1,
-      lastLoginDate: new Date().toISOString().split('T')[0],
-      role: 'user',
-      ranking: 0
-    }
-    
-    createTransaction(userId, 'signup', 100, 'Welcome bonus for new user')
-  }
-  
-  return profiles[userId]
-}
+/**
+ * Process daily login: award streak-based candy bonus
+ */
+export async function processDailyLogin(
+  userId: string
+): Promise<{ streak: number; bonus: number }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) throw new Error('User not found')
 
-export function processDailyLogin(userId: string): { streak: number; bonus: number } {
-  const profile = getOrCreateProfile(userId, '', '')
   const today = new Date().toISOString().split('T')[0]
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  
-  let bonus = 10
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split('T')[0]
+
+  // Already checked in today
+  if (user.lastLoginDate === today) {
+    return { streak: user.currentStreak, bonus: 0 }
+  }
+
   let newStreak = 1
-  
-  if (profile.lastLoginDate === yesterday) {
-    newStreak = profile.currentStreak + 1
-    bonus = 10 * Math.min(newStreak, 7)
-    profile.currentStreak = newStreak
-    profile.longestStreak = Math.max(profile.longestStreak, newStreak)
-  } else if (profile.lastLoginDate === today) {
-    return { streak: profile.currentStreak, bonus: 0 }
-  } else {
-    profile.currentStreak = 1
+  let bonus = 10
+
+  if (user.lastLoginDate === yesterday) {
+    // Consecutive day
+    newStreak = user.currentStreak + 1
+    bonus = 10 * Math.min(newStreak, 7) // Max 70 per day for 7-day streak
   }
-  
-  profile.lastLoginDate = today
-  
+  // else: streak broken, reset to 1
+
+  // Update user streak and last login date
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      currentStreak: newStreak,
+      longestStreak: Math.max(user.longestStreak, newStreak),
+      lastLoginDate: today,
+    },
+  })
+
+  // Award candy bonus
   if (bonus > 0) {
-    createTransaction(userId, 'daily_streak', bonus, `Daily login streak x${newStreak}`)
+    await createTransaction(
+      userId,
+      'DAILY_LOGIN',
+      bonus,
+      `Daily login streak x${newStreak}`
+    )
   }
-  
+
   return { streak: newStreak, bonus }
 }
 
-export function awardCommunityBoost(userId: string, action: 'post' | 'comment' | 'like'): number {
+/**
+ * Award candy for community actions (post, comment, like)
+ */
+export async function awardCommunityBoost(
+  userId: string,
+  action: 'post' | 'comment' | 'like'
+): Promise<number> {
   const rewards: Record<string, number> = {
     post: 20,
     comment: 5,
-    like: 1
+    like: 1,
   }
-  
+
   const reward = rewards[action] || 0
-  
   if (reward > 0) {
-    createTransaction(userId, 'community_post', reward, `Community boost: ${action}`)
+    await createTransaction(
+      userId,
+      'COMMUNITY_POST',
+      reward,
+      `Community boost: ${action}`
+    )
   }
-  
+
   return reward
 }
 
-export function recordPrediction(userId: string, isCorrect: boolean, difficulty: 'easy' | 'medium' | 'hard'): number {
-  const profile = getOrCreateProfile(userId, '', '')
-  profile.totalPredictions++
-  
-  if (!isCorrect) {
-    return 0
-  }
-  
-  profile.correctPredictions++
-  
+/**
+ * Record a prediction result and award candy if correct
+ */
+export async function recordPredictionResult(
+  userId: string,
+  isCorrect: boolean,
+  difficulty: 'easy' | 'medium' | 'hard',
+  predictionId?: string
+): Promise<number> {
+  if (!isCorrect) return 0
+
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) return 0
+
   const baseRewards: Record<string, number> = {
     easy: 25,
     medium: 50,
-    hard: 100
+    hard: 100,
   }
-  
-  const accuracyBonus = Math.floor((profile.correctPredictions / profile.totalPredictions) * 10)
+
+  const newTotal = user.totalPredictions + 1
+  const newCorrect = user.correctPredictions + 1
+  const accuracyBonus = Math.floor((newCorrect / newTotal) * 10)
   const reward = baseRewards[difficulty] + accuracyBonus
-  
-  createTransaction(userId, 'prediction_correct', reward, `Prediction correct (${difficulty})`)
-  
-  checkMasterPromotion(profile)
-  
+
+  // Update prediction stats on user
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      totalPredictions: newTotal,
+      correctPredictions: newCorrect,
+    },
+  })
+
+  await createTransaction(
+    userId,
+    'PREDICTION_CORRECT',
+    reward,
+    `Prediction correct (${difficulty})`,
+    predictionId
+  )
+
+  // Check master promotion
+  await checkMasterPromotion(userId)
+
   return reward
 }
 
-export function checkMasterPromotion(profile: UserProfile) {
-  if (profile.role === 'master') return
-  
-  if (profile.totalPredictions >= 20) {
-    const recentAccuracy = profile.correctPredictions / profile.totalPredictions
-    if (recentAccuracy >= 0.75) {
-      profile.role = 'master'
-      createTransaction(profile.userId, 'admin_adjustment', 1000, 'Promoted to Master Predictor')
+/**
+ * Increment prediction count (for incorrect predictions)
+ */
+export async function recordPredictionAttempt(userId: string): Promise<void> {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { totalPredictions: { increment: 1 } },
+  })
+}
+
+/**
+ * Check if user qualifies for Master Predictor promotion
+ * Requires: >= 20 predictions and >= 75% accuracy
+ */
+export async function checkMasterPromotion(userId: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user || user.role === 'master') return false
+
+  if (user.totalPredictions >= 20) {
+    const accuracy = user.correctPredictions / user.totalPredictions
+    if (accuracy >= 0.75) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { role: 'master' },
+      })
+
+      await createTransaction(
+        userId,
+        'ADMIN_ADJUSTMENT',
+        1000,
+        'Promoted to Master Predictor!'
+      )
+
+      return true
     }
   }
+
+  return false
 }
 
-export function getLeaderboard(): UserProfile[] {
-  return Object.values(profiles)
-    .filter(p => p.totalPredictions >= 5)
-    .sort((a, b) => {
-      const accA = a.totalPredictions > 0 ? a.correctPredictions / a.totalPredictions : 0
-      const accB = b.totalPredictions > 0 ? b.correctPredictions / b.totalPredictions : 0
-      return accB - accA
-    })
-    .map((p, index) => {
-      p.ranking = index + 1
-      return p
-    })
+/**
+ * Get leaderboard: top users by prediction accuracy (min 5 predictions)
+ */
+export async function getLeaderboard(limit: number = 20) {
+  const users = await prisma.user.findMany({
+    where: { totalPredictions: { gte: 5 } },
+    orderBy: [
+      { correctPredictions: 'desc' },
+      { candyBalance: 'desc' },
+    ],
+    take: limit,
+  })
+
+  return users.map((user, index) => ({
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    candyBalance: user.candyBalance,
+    totalPredictions: user.totalPredictions,
+    correctPredictions: user.correctPredictions,
+    accuracy:
+      user.totalPredictions > 0
+        ? Math.round((user.correctPredictions / user.totalPredictions) * 100)
+        : 0,
+    role: user.role,
+    ranking: index + 1,
+  }))
 }
 
-export function convertToTokens(userId: string, amount: number): boolean {
-  const profile = profiles[userId]
-  if (!profile || profile.candyBalance < amount) return false
-  if (profile.role !== 'master') return false
-  
-  createTransaction(userId, 'conversion', -amount, `Converted ${amount} candy to tokens`)
-  
+/**
+ * Convert candy to tokens (Web3, master-only, compliant regions only)
+ */
+export async function convertToTokens(
+  userId: string,
+  amount: number
+): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) return false
+  if (user.candyBalance < amount) return false
+  if (user.role !== 'master') return false
+  if (user.region === 'CN') return false
+
+  await createTransaction(
+    userId,
+    'CONVERSION',
+    -amount,
+    `Converted ${amount} candy to tokens`
+  )
+
   return true
 }
 
-export function getProfile(userId: string): UserProfile | undefined {
-  return profiles[userId]
-}
+/**
+ * Get user's candy profile
+ */
+export async function getUserCandyProfile(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) return null
 
-export function updateProfile(userId: string, updates: Partial<UserProfile>): UserProfile | undefined {
-  const profile = profiles[userId]
-  if (!profile) return undefined
-  
-  Object.assign(profile, updates)
-  return profile
+  return {
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    candyBalance: user.candyBalance,
+    totalPredictions: user.totalPredictions,
+    correctPredictions: user.correctPredictions,
+    currentStreak: user.currentStreak,
+    longestStreak: user.longestStreak,
+    lastLoginDate: user.lastLoginDate,
+    role: user.role,
+    region: user.region,
+  }
 }

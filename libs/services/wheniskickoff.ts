@@ -11,86 +11,95 @@ async function getCheerio() {
 }
 
 const WORLD_CUP_2026_TEAMS: Team[] = [
-  // Group A (6 teams)
-  { id: 'USA', name: 'United States', shortName: 'USA', flag: '🇺🇸', group: 'Group A' },
-  { id: 'MAR', name: 'Morocco', shortName: 'MAR', flag: '🇲🇦', group: 'Group A' },
-  { id: 'CRO', name: 'Croatia', shortName: 'CRO', flag: '🇭🇷', group: 'Group A' },
-  { id: 'NGA', name: 'Nigeria', shortName: 'NGA', flag: '🇳🇬', group: 'Group A' },
-  { id: 'SWE', name: 'Sweden', shortName: 'SWE', flag: '🇸🇪', group: 'Group A' },
-  { id: 'AUT', name: 'Austria', shortName: 'AUT', flag: '🇦🇹', group: 'Group A' },
+  // Group A (4 teams)
+  { id: 'MEX', name: 'Mexico', shortName: 'MEX', flag: '🇲🇽', group: 'Group A' },
+  { id: 'KOR', name: 'South Korea', shortName: 'KOR', flag: '🇰🇷', group: 'Group A' },
+  { id: 'CZE', name: 'Czech Republic', shortName: 'CZE', flag: '🇨🇿', group: 'Group A' },
+  { id: 'RSA', name: 'South Africa', shortName: 'RSA', flag: '🇿🇦', group: 'Group A' },
 
-  // Group B (6 teams)
-  { id: 'ENG', name: 'England', shortName: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', group: 'Group B' },
-  { id: 'IRN', name: 'Iran', shortName: 'IRN', flag: '🇮🇷', group: 'Group B' },
-  { id: 'WAL', name: 'Wales', shortName: 'WAL', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', group: 'Group B' },
-  { id: 'FIN', name: 'Finland', shortName: 'FIN', flag: '🇫🇮', group: 'Group B' },
+  // Group B (4 teams)
+  { id: 'CAN', name: 'Canada', shortName: 'CAN', flag: '🇨🇦', group: 'Group B' },
+  { id: 'BIH', name: 'Bosnia and Herzegovina', shortName: 'BIH', flag: '🇧🇦', group: 'Group B' },
+  { id: 'QAT', name: 'Qatar', shortName: 'QAT', flag: '🇶🇦', group: 'Group B' },
   { id: 'SUI', name: 'Switzerland', shortName: 'SUI', flag: '🇨🇭', group: 'Group B' },
-  { id: 'GHA', name: 'Ghana', shortName: 'GHA', flag: '🇬🇭', group: 'Group B' },
 
-  // Group C (6 teams)
-  { id: 'ARG', name: 'Argentina', shortName: 'ARG', flag: '🇦🇷', group: 'Group C' },
-  { id: 'KSA', name: 'Saudi Arabia', shortName: 'KSA', flag: '🇸🇦', group: 'Group C' },
-  { id: 'MEX', name: 'Mexico', shortName: 'MEX', flag: '🇲🇽', group: 'Group C' },
-  { id: 'ECU', name: 'Ecuador', shortName: 'ECU', flag: '🇪🇨', group: 'Group C' },
-  { id: 'DEN', name: 'Denmark', shortName: 'DEN', flag: '🇩🇰', group: 'Group C' },
-  { id: 'CMR', name: 'Cameroon', shortName: 'CMR', flag: '🇨🇲', group: 'Group C' },
+  // Group C (4 teams)
+  { id: 'BRA', name: 'Brazil', shortName: 'BRA', flag: '🇧🇷', group: 'Group C' },
+  { id: 'MAR', name: 'Morocco', shortName: 'MAR', flag: '🇲🇦', group: 'Group C' },
+  { id: 'HAI', name: 'Haiti', shortName: 'HAI', flag: '🇭🇹', group: 'Group C' },
+  { id: 'SCO', name: 'Scotland', shortName: 'SCO', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', group: 'Group C' },
 
-  // Group D (6 teams)
-  { id: 'FRA', name: 'France', shortName: 'FRA', flag: '🇫🇷', group: 'Group D' },
+  // Group D (4 teams)
+  { id: 'USA', name: 'United States', shortName: 'USA', flag: '🇺🇸', group: 'Group D' },
+  { id: 'PAR', name: 'Paraguay', shortName: 'PAR', flag: '🇵🇾', group: 'Group D' },
   { id: 'AUS', name: 'Australia', shortName: 'AUS', flag: '🇦🇺', group: 'Group D' },
-  { id: 'GER', name: 'Germany', shortName: 'GER', flag: '🇩🇪', group: 'Group D' },
-  { id: 'JPN', name: 'Japan', shortName: 'JPN', flag: '🇯🇵', group: 'Group D' },
-  { id: 'NOR', name: 'Norway', shortName: 'NOR', flag: '🇳🇴', group: 'Group D' },
-  { id: 'TUN', name: 'Tunisia', shortName: 'TUN', flag: '🇹🇳', group: 'Group D' },
+  { id: 'TUR', name: 'Turkey', shortName: 'TUR', flag: '🇹🇷', group: 'Group D' },
 
-  // Group E (6 teams)
-  { id: 'ESP', name: 'Spain', shortName: 'ESP', flag: '🇪🇸', group: 'Group E' },
-  { id: 'NZL', name: 'New Zealand', shortName: 'NZL', flag: '🇳🇿', group: 'Group E' },
-  { id: 'BEL', name: 'Belgium', shortName: 'BEL', flag: '🇧🇪', group: 'Group E' },
-  { id: 'CAN', name: 'Canada', shortName: 'CAN', flag: '🇨🇦', group: 'Group E' },
-  { id: 'UKR', name: 'Ukraine', shortName: 'UKR', flag: '🇺🇦', group: 'Group E' },
-  { id: 'COL', name: 'Colombia', shortName: 'COL', flag: '🇨🇴', group: 'Group E' },
+  // Group E (4 teams)
+  { id: 'GER', name: 'Germany', shortName: 'GER', flag: '🇩🇪', group: 'Group E' },
+  { id: 'CUW', name: 'Curacao', shortName: 'CUW', flag: '🇨🇼', group: 'Group E' },
+  { id: 'ECU', name: 'Ecuador', shortName: 'ECU', flag: '🇪🇨', group: 'Group E' },
+  { id: 'CIV', name: 'Ivory Coast', shortName: 'CIV', flag: '🇨🇮', group: 'Group E' },
 
-  // Group F (6 teams)
-  { id: 'BRA', name: 'Brazil', shortName: 'BRA', flag: '🇧🇷', group: 'Group F' },
-  { id: 'SRB', name: 'Serbia', shortName: 'SRB', flag: '🇷🇸', group: 'Group F' },
+  // Group F (4 teams)
   { id: 'NED', name: 'Netherlands', shortName: 'NED', flag: '🇳🇱', group: 'Group F' },
-  { id: 'JAM', name: 'Jamaica', shortName: 'JAM', flag: '🇯🇲', group: 'Group F' },
-  { id: 'GRE', name: 'Greece', shortName: 'GRE', flag: '🇬🇷', group: 'Group F' },
-  { id: 'PER', name: 'Peru', shortName: 'PER', flag: '🇵🇪', group: 'Group F' },
+  { id: 'JPN', name: 'Japan', shortName: 'JPN', flag: '🇯🇵', group: 'Group F' },
+  { id: 'SWE', name: 'Sweden', shortName: 'SWE', flag: '🇸🇪', group: 'Group F' },
+  { id: 'TUN', name: 'Tunisia', shortName: 'TUN', flag: '🇹🇳', group: 'Group F' },
 
-  // Group G (6 teams)
-  { id: 'POR', name: 'Portugal', shortName: 'POR', flag: '🇵🇹', group: 'Group G' },
-  { id: 'KOR', name: 'South Korea', shortName: 'KOR', flag: '🇰🇷', group: 'Group G' },
-  { id: 'URU', name: 'Uruguay', shortName: 'URU', flag: '🇺🇾', group: 'Group G' },
-  { id: 'PAN', name: 'Panama', shortName: 'PAN', flag: '🇵🇦', group: 'Group G' },
-  { id: 'TUR', name: 'Turkey', shortName: 'TUR', flag: '🇹🇷', group: 'Group G' },
-  { id: 'PAR', name: 'Paraguay', shortName: 'PAR', flag: '🇵🇾', group: 'Group G' },
+  // Group G (4 teams)
+  { id: 'BEL', name: 'Belgium', shortName: 'BEL', flag: '🇧🇪', group: 'Group G' },
+  { id: 'EGY', name: 'Egypt', shortName: 'EGY', flag: '🇪🇬', group: 'Group G' },
+  { id: 'IRN', name: 'Iran', shortName: 'IRN', flag: '🇮🇷', group: 'Group G' },
+  { id: 'NZL', name: 'New Zealand', shortName: 'NZL', flag: '🇳🇿', group: 'Group G' },
 
-  // Group H (6 teams)
-  { id: 'ITA', name: 'Italy', shortName: 'ITA', flag: '🇮🇹', group: 'Group H' },
-  { id: 'ALG', name: 'Algeria', shortName: 'ALG', flag: '🇩🇿', group: 'Group H' },
-  { id: 'CHI', name: 'Chile', shortName: 'CHI', flag: '🇨🇱', group: 'Group H' },
-  { id: 'POL', name: 'Poland', shortName: 'POL', flag: '🇵🇱', group: 'Group H' },
-  { id: 'ROM', name: 'Romania', shortName: 'ROM', flag: '🇷🇴', group: 'Group H' },
-  { id: 'VEN', name: 'Venezuela', shortName: 'VEN', flag: '🇻🇪', group: 'Group H' },
+  // Group H (4 teams)
+  { id: 'ESP', name: 'Spain', shortName: 'ESP', flag: '🇪🇸', group: 'Group H' },
+  { id: 'CPV', name: 'Cape Verde', shortName: 'CPV', flag: '🇨🇻', group: 'Group H' },
+  { id: 'KSA', name: 'Saudi Arabia', shortName: 'KSA', flag: '🇸🇦', group: 'Group H' },
+  { id: 'URU', name: 'Uruguay', shortName: 'URU', flag: '🇺🇾', group: 'Group H' },
+
+  // Group I (4 teams)
+  { id: 'FRA', name: 'France', shortName: 'FRA', flag: '🇫🇷', group: 'Group I' },
+  { id: 'SEN', name: 'Senegal', shortName: 'SEN', flag: '🇸🇳', group: 'Group I' },
+  { id: 'IRQ', name: 'Iraq', shortName: 'IRQ', flag: '🇮🇶', group: 'Group I' },
+  { id: 'NOR', name: 'Norway', shortName: 'NOR', flag: '🇳🇴', group: 'Group I' },
+
+  // Group J (4 teams)
+  { id: 'ARG', name: 'Argentina', shortName: 'ARG', flag: '🇦🇷', group: 'Group J' },
+  { id: 'ALG', name: 'Algeria', shortName: 'ALG', flag: '🇩🇿', group: 'Group J' },
+  { id: 'AUT', name: 'Austria', shortName: 'AUT', flag: '🇦🇹', group: 'Group J' },
+  { id: 'JOR', name: 'Jordan', shortName: 'JOR', flag: '🇯🇴', group: 'Group J' },
+
+  // Group K (4 teams)
+  { id: 'POR', name: 'Portugal', shortName: 'POR', flag: '🇵🇹', group: 'Group K' },
+  { id: 'COD', name: 'DR Congo', shortName: 'COD', flag: '🇨🇩', group: 'Group K' },
+  { id: 'UZB', name: 'Uzbekistan', shortName: 'UZB', flag: '🇺🇿', group: 'Group K' },
+  { id: 'COL', name: 'Colombia', shortName: 'COL', flag: '🇨🇴', group: 'Group K' },
+
+  // Group L (4 teams)
+  { id: 'ENG', name: 'England', shortName: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', group: 'Group L' },
+  { id: 'CRO', name: 'Croatia', shortName: 'CRO', flag: '🇭🇷', group: 'Group L' },
+  { id: 'GHA', name: 'Ghana', shortName: 'GHA', flag: '🇬🇭', group: 'Group L' },
+  { id: 'PAN', name: 'Panama', shortName: 'PAN', flag: '🇵🇦', group: 'Group L' },
 ]
 
 const TEAM_FLAGS: Record<string, string> = {
   'argentina': '🇦🇷', 'brazil': '🇧🇷', 'canada': '🇨🇦', 'mexico': '🇲🇽',
   'france': '🇫🇷', 'portugal': '🇵🇹', 'usa': '🇺🇸', 'united states': '🇺🇸', 'panama': '🇵🇦',
   'england': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'spain': '🇪🇸', 'germany': '🇩🇪', 'japan': '🇯🇵',
-  'belgium': '🇧🇪', 'italy': '🇮🇹', 'netherlands': '🇳🇱', 'costa rica': '🇨🇷',
+  'belgium': '🇧🇪', 'netherlands': '🇳🇱', 'costa rica': '🇨🇷',
   'uruguay': '🇺🇾', 'colombia': '🇨🇴', 'ecuador': '🇪🇨', 'paraguay': '🇵🇾',
   'croatia': '🇭🇷', 'morocco': '🇲🇦', 'australia': '🇦🇺', 'new zealand': '🇳🇿',
   'senegal': '🇸🇳', 'korea': '🇰🇷', 'south korea': '🇰🇷', 'iran': '🇮🇷',
-  'ghana': '🇬🇭', 'cameroon': '🇨🇲', 'uzbekistan': '🇺🇿', 'qatar': '🇶🇦',
-  'saudi arabia': '🇸🇦', 'finland': '🇫🇮', 'wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿', 'nigeria': '🇳🇬',
-  'serbia': '🇷🇸', 'jamaica': '🇯🇲', 'algeria': '🇩🇿', 'chile': '🇨🇱',
-  'poland': '🇵🇱', 'sweden': '🇸🇪', 'switzerland': '🇨🇭', 'denmark': '🇩🇰',
-  'norway': '🇳🇴', 'ukraine': '🇺🇦', 'greece': '🇬🇷', 'turkey': '🇹🇷',
-  'romania': '🇷🇴', 'austria': '🇦🇹', 'czech republic': '🇨🇿', 'hungary': '🇭🇺',
-  'scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'peru': '🇵🇪', 'venezuela': '🇻🇪', 'tunisia': '🇹🇳',
+  'ghana': '🇬🇭', 'saudi arabia': '🇸🇦', 'switzerland': '🇨🇭',
+  'sweden': '🇸🇪', 'turkey': '🇹🇷', 'austria': '🇦🇹',
+  'scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'tunisia': '🇹🇳', 'algeria': '🇩🇿',
+  'uzbekistan': '🇺🇿', 'qatar': '🇶🇦', 'norway': '🇳🇴',
+  'czech republic': '🇨🇿', 'egypt': '🇪🇬', 'south africa': '🇿🇦',
+  'bosnia': '🇧🇦', 'bosnia and herzegovina': '🇧🇦', 'cape verde': '🇨🇻',
+  'curacao': '🇨🇼', 'ivory coast': '🇨🇮', 'dr congo': '🇨🇩',
+  'haiti': '🇭🇹', 'iraq': '🇮🇶', 'jordan': '🇯🇴',
 }
 
 const VENUES = [
@@ -173,7 +182,7 @@ async function parseMatchScheduleFromHTML(html: string): Promise<Match[]> {
       if (teams.length === 2) {
         const homeTeam = getTeamByName(teams[0].trim())
         const awayTeam = getTeamByName(teams[1].trim())
-        const groupLetter = String.fromCharCode(65 + (matches.length % 8))
+        const groupLetter = String.fromCharCode(65 + (matches.length % 12))
 
         matches.push({
           id: `wc2026-match-${matches.length + 1}`,
@@ -289,22 +298,21 @@ export function getMockMatchSchedule(): Match[] {
   const matches: Match[] = []
   const baseDate = new Date('2026-06-11')
 
-  const groupLetters = 'ABCDEFGH'.split('')
+  const groupLetters = 'ABCDEFGHIJKL'.split('')
   const groupMatchesPerTeam = [
-    [0, 1], [2, 3], [4, 5],
-    [0, 2], [1, 4], [3, 5],
-    [0, 3], [1, 5], [2, 4],
-    [0, 4], [1, 2], [3, 5],
-    [0, 5], [1, 3], [2, 4],
+    [0, 1], [2, 3],
+    [0, 2], [1, 3],
+    [0, 3], [1, 2],
   ]
 
-  for (let groupIdx = 0; groupIdx < 8; groupIdx++) {
+  for (let groupIdx = 0; groupIdx < 12; groupIdx++) {
     const groupLetter = groupLetters[groupIdx]
     const groupTeams = WORLD_CUP_2026_TEAMS.filter(t => t.group === `Group ${groupLetter}`)
     
-    for (let matchIdx = 0; matchIdx < 6; matchIdx++) {
-      const team1 = groupTeams[matchIdx]
-      const team2 = groupTeams[(matchIdx + 1) % groupTeams.length]
+    for (let matchIdx = 0; matchIdx < groupMatchesPerTeam.length; matchIdx++) {
+      const [i1, i2] = groupMatchesPerTeam[matchIdx]
+      const team1 = groupTeams[i1]
+      const team2 = groupTeams[i2]
       
       const matchDate = new Date(baseDate)
       matchDate.setDate(matchDate.getDate() + Math.floor((groupIdx * 6 + matchIdx) / 2))

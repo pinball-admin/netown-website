@@ -48,36 +48,36 @@ export default function HeroSection() {
       <div className="relative max-w-4xl mx-auto text-center">
         <div className="mb-3 sm:mb-4">
           <span className="inline-block px-3 py-1 sm:px-4 sm:py-1.5 bg-[#00FF66]/10 border border-[#00FF66]/30 rounded-full text-[#00FF66] text-xs sm:text-sm font-medium animate-pulse-glow">
-            🏆 FIFA World Cup 2026
+            🏆 {t('hero.fifaBanner')}
           </span>
         </div>
 
         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
-          <span className="text-white">FIFA World Cup 2026</span>
+          <span className="text-white">{t('hero.titleFifa')}</span>
           <br />
-          <span className="text-cyber">AI Prediction Arena</span>
+          <span className="text-cyber">{t('hero.aiArena')}</span>
         </h1>
 
         <div className="flex justify-center items-center gap-2 sm:gap-3 mb-6 sm:mb-8 px-2">
           {mounted ? (
             <>
-              <CountdownUnit value={timeLeft.days} label="Days" />
+              <CountdownUnit value={timeLeft.days} label={t('hero.days')} />
               <CountdownSeparator />
-              <CountdownUnit value={timeLeft.hours} label="Hours" />
+              <CountdownUnit value={timeLeft.hours} label={t('hero.hours')} />
               <CountdownSeparator />
-              <CountdownUnit value={timeLeft.minutes} label="Min" />
+              <CountdownUnit value={timeLeft.minutes} label={t('hero.min')} />
               <CountdownSeparator />
-              <CountdownUnit value={timeLeft.seconds} label="Sec" />
+              <CountdownUnit value={timeLeft.seconds} label={t('hero.sec')} />
             </>
           ) : (
             <>
-              <CountdownUnit value={0} label="Days" />
+              <CountdownUnit value={0} label={t('hero.days')} />
               <CountdownSeparator />
-              <CountdownUnit value={0} label="Hours" />
+              <CountdownUnit value={0} label={t('hero.hours')} />
               <CountdownSeparator />
-              <CountdownUnit value={0} label="Min" />
+              <CountdownUnit value={0} label={t('hero.min')} />
               <CountdownSeparator />
-              <CountdownUnit value={0} label="Sec" />
+              <CountdownUnit value={0} label={t('hero.sec')} />
             </>
           )}
         </div>

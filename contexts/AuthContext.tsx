@@ -51,8 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const login = (userData: any) => {
+  const login = async (userData: any) => {
     setUser(userData)
+    // Refresh from server to get latest candy balance
+    await refreshUser()
   }
 
   const logout = async () => {

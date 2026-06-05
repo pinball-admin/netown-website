@@ -106,15 +106,15 @@ export default function TeamPageContent({ team, teamId, relatedTeams, form, squa
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">🏟️ Team Info</h2>
+          <h2 className="text-2xl font-bold mb-6">{t('team.teamInfo')}</h2>
           <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div>
-                <div className="text-slate-400 text-sm mb-1">Stadium</div>
+                <div className="text-slate-400 text-sm mb-1">{t('team.stadium')}</div>
                 <div className="font-semibold">{team.stadium}</div>
               </div>
               <div>
-                <div className="text-slate-400 text-sm mb-1">Capacity</div>
+                <div className="text-slate-400 text-sm mb-1">{t('team.capacity')}</div>
                 <div className="font-semibold">{team.capacity?.toLocaleString() || 'N/A'}</div>
               </div>
               <div>
@@ -147,17 +147,17 @@ export default function TeamPageContent({ team, teamId, relatedTeams, form, squa
           <section>
             <h2 className="text-2xl font-bold mb-6">⚔️ {t('team.bestResult')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {relatedTeams.map(t => (
+              {relatedTeams.map(team => (
                 <Link
-                  key={t.id}
-                  href={`/team-${t.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  key={team.id}
+                  href={`/team-${team.name.toLowerCase().replace(/\s+/g, '-')}`}
                   className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:bg-slate-700/50 hover:border-amber-500/50 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{t.flag}</span>
+                    <span className="text-2xl">{team.flag}</span>
                     <div>
-                      <div className="font-semibold">{tTeam(t.id)}</div>
-                      <div className="text-xs text-slate-400">FIFA #{t.ranking || 'N/A'}</div>
+                      <div className="font-semibold">{tTeam(team.id)}</div>
+                      <div className="text-xs text-slate-400">{t('team.fifaRankPrefix')}{team.ranking || 'N/A'}</div>
                     </div>
                   </div>
                 </Link>

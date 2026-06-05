@@ -1,77 +1,107 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useI18n } from '@/contexts/I18nContext'
-
-interface ToastProps {
-  message: string
-  isVisible: boolean
-}
-
-function Toast({ message, isVisible }: ToastProps) {
-  if (!isVisible) return null
-
-  return (
-    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] animate-slideDown">
-      <div className="bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-md border border-amber-400/50 rounded-xl px-6 py-4 shadow-2xl shadow-amber-500/20">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🍬</span>
-          <p className="text-white font-semibold">{message}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 
 export default function CandyPoints() {
   const { t } = useI18n()
-  const [candy, setCandy] = useState(120)
+  const { user, isLoggedIn, refreshUser } = useAuth()
+  const { toast } = useToast()
   const [checkedIn, setCheckedIn] = useState(false)
-  const [showToast, setShowToast] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [streak, setStreak] = useState(3)
+  const [checkingIn, setCheckingIn] = useState(false)
+  const [leaderboardData, setLeaderboardData] = useState<Array<{
+    rank: number
+    name: string
+    score: number
+    isCurrentUser: boolean
+  }>>([])
 
-  const leaderboard = [
-    { rank: 1, nameKey: 'cryptoKing_UK', score: 4820 },
-    { rank: 2, nameKey: 'tacticsMaster_DE', score: 3650 },
-    { rank: 3, nameKey: 'predator_Brazil', score: 2890 },
-    { rank: 4, nameKey: 'dataWhiz_USA', score: 2450 },
-    { rank: 5, nameKey: 'you', score: candy },
-  ]
+  const candy = user?.candyBalance || 0
+  const streak = user?.currentStreak || 0
 
-  const handleCheckIn = () => {
-    if (checkedIn) return
+  // Fetch leaderboard from API
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const res = await fetch('/api/leaderboard')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && data.leaderboard) {
+          setLeaderboardData(
+            data.leaderboard.slice(0, 5).map((u: any, i: number) => ({
+              rank: i + 1,
+              name: u.name,
+              score: u.candyBalance,
+              isCurrentUser: u.userId === user?.id,
+            }))
+          )
+        }
+      }
+    } catch {
+      // Fallback: show current user only
+      if (user) {
+        setLeaderboardData([
+          { rank: 1, name: user.name, score: user.candyBalance, isCurrentUser: true },
+        ])
+      }
+    }
+  }, [user?.id])
 
-    setCheckedIn(true)
-    setCandy(prev => prev + 10)
-    setStreak(prev => prev + 1)
-    setToastMessage(t('candyPoints.toastMessage'))
-    setShowToast(true)
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchLeaderboard()
+      // Check if already checked in today
+      const today = new Date().toISOString().split('T')[0]
+      if (user?.lastLoginDate === today) {
+        setCheckedIn(true)
+      }
+    }
+  }, [isLoggedIn, user?.lastLoginDate, fetchLeaderboard])
 
-    setTimeout(() => {
-      setShowToast(false)
-    }, 3000)
+  const handleCheckIn = async () => {
+    if (checkedIn || checkingIn || !isLoggedIn) return
+
+    setCheckingIn(true)
+    try {
+      const res = await fetch('/api/candy/daily-login', { method: 'POST' })
+      const data = await res.json()
+
+      if (data.success) {
+        setCheckedIn(true)
+        toast(
+          data.bonus > 0
+            ? `${t('candyPoints.toastMessage')} +${data.bonus} 🍬`
+            : t('candyPoints.checkedIn'),
+          'success'
+        )
+        // Refresh user data to get updated balance
+        await refreshUser()
+        // Refresh leaderboard
+        await fetchLeaderboard()
+      }
+    } catch (error) {
+      console.error('Check-in failed:', error)
+    } finally {
+      setCheckingIn(false)
+    }
   }
 
-  useEffect(() => {
-    const today = new Date().toDateString()
-    const lastCheckIn = localStorage.getItem('lastCheckIn')
-    if (lastCheckIn === today) {
-      setCheckedIn(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (checkedIn) {
-      localStorage.setItem('lastCheckIn', new Date().toDateString())
-    }
-  }, [checkedIn])
+  // Default leaderboard if no data loaded
+  const displayLeaderboard = leaderboardData.length > 0
+    ? leaderboardData
+    : [
+        { rank: 1, name: 'PredictorKing_UK', score: 4820, isCurrentUser: false },
+        { rank: 2, name: 'TacticsMaster_DE', score: 3650, isCurrentUser: false },
+        { rank: 3, name: 'Predator_Brazil', score: 2890, isCurrentUser: false },
+        { rank: 4, name: 'DataWhiz_USA', score: 2450, isCurrentUser: false },
+        ...(isLoggedIn && user
+          ? [{ rank: 5, name: user.name, score: candy, isCurrentUser: true }]
+          : []),
+      ]
 
   return (
-    <>
-      <Toast message={toastMessage} isVisible={showToast} />
-
-      <div className="space-y-5">
+    <div className="space-y-5">
         {/* Candy Points Status */}
         <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-xl p-5 shadow-xl">
           <div className="flex items-center justify-between mb-4">
@@ -90,7 +120,7 @@ export default function CandyPoints() {
               <span className="text-slate-400 text-sm">{t('candyPoints.yourCandy')}</span>
               <div className="flex items-center gap-2">
                 <span className="text-3xl font-extrabold bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-                  {candy}
+                  {candy.toLocaleString()}
                 </span>
                 <span className="text-amber-500 text-lg">🍬</span>
               </div>
@@ -98,27 +128,38 @@ export default function CandyPoints() {
           </div>
 
           {/* Daily Check-in Button */}
-          <button
-            onClick={handleCheckIn}
-            disabled={checkedIn}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
-              checkedIn
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
-                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:from-amber-400 hover:to-orange-400 active:scale-95'
-            }`}
-          >
-            {checkedIn ? (
-              <>
-                <span className="text-lg">✓</span>
-                <span>{t('candyPoints.checkedIn')}</span>
-              </>
-            ) : (
-              <>
-                <span className="text-lg">🍬</span>
-                <span>{t('candyPoints.dailyCheckIn')}</span>
-              </>
-            )}
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={handleCheckIn}
+              disabled={checkedIn || checkingIn}
+              className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                checkedIn
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
+                  : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:from-amber-400 hover:to-orange-400 active:scale-95'
+              }`}
+            >
+              {checkingIn ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  <span>{t('candyPoints.processing')}</span>
+                </>
+              ) : checkedIn ? (
+                <>
+                  <span className="text-lg">✓</span>
+                  <span>{t('candyPoints.checkedIn')}</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-lg">🍬</span>
+                  <span>{t('candyPoints.dailyCheckIn')}</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="text-center text-sm text-slate-500 py-2">
+              {t('candyPoints.loginEarn')}
+            </div>
+          )}
         </div>
 
         {/* Leaderboard */}
@@ -129,11 +170,11 @@ export default function CandyPoints() {
           </h2>
 
           <div className="space-y-2">
-            {leaderboard.map((user, index) => (
+            {displayLeaderboard.map((entry, index) => (
               <div
-                key={user.rank}
+                key={entry.rank}
                 className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                  user.nameKey === 'you'
+                  entry.isCurrentUser
                     ? 'bg-emerald-500/10 border border-emerald-500/30'
                     : 'bg-slate-800/40 border border-transparent hover:border-slate-700/50'
                 }`}
@@ -148,22 +189,21 @@ export default function CandyPoints() {
                           ? 'bg-orange-600/20 text-orange-400'
                           : 'bg-slate-700/50 text-slate-400'
                   }`}>
-                    {user.rank}
+                    {entry.rank}
                   </div>
-                  <span 
+                  <span
                     className={`text-sm font-medium truncate ${
-                      user.nameKey === 'you' ? 'text-emerald-400' : 'text-slate-300'
+                      entry.isCurrentUser ? 'text-emerald-400' : 'text-slate-300'
                     }`}
-                    title={user.nameKey === 'you' ? t('candyPoints.you') : t(`candyPoints.leaderboardNames.${user.nameKey}`)}
                   >
-                    {user.nameKey === 'you' ? t('candyPoints.you') : t(`candyPoints.leaderboardNames.${user.nameKey}`)}
+                    {entry.isCurrentUser ? t('candyPoints.you') : entry.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                   <span className={`font-bold text-sm ${
-                    user.nameKey === 'you' ? 'text-emerald-400' : 'text-amber-400'
+                    entry.isCurrentUser ? 'text-emerald-400' : 'text-amber-400'
                   }`}>
-                    {user.score.toLocaleString()}
+                    {entry.score.toLocaleString()}
                   </span>
                   <span className="text-amber-500/60 text-xs">🍬</span>
                 </div>
@@ -179,6 +219,5 @@ export default function CandyPoints() {
           </p>
         </div>
       </div>
-    </>
   )
 }

@@ -16,7 +16,7 @@ const EXPERT_CONFIG: Record<ExpertId, ExpertData> = {
     id: 'beckham_chen',
     gradient: 'from-blue-500 to-purple-600',
     accentColor: 'blue',
-    imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=200',
+    imageUrl: 'https://images.unsplash.com/photo-1489944440615?w=200',
     specialty: 'Bayesian Logic',
   },
   zidane_gao: {
@@ -30,7 +30,7 @@ const EXPERT_CONFIG: Record<ExpertId, ExpertData> = {
     id: 'batistuta_zhang',
     gradient: 'from-red-500 to-rose-600',
     accentColor: 'red',
-    imageUrl: 'https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=200',
+    imageUrl: 'https://images.unsplash.com/photo-1431324155629?w=200',
     specialty: 'xG Analysis',
   },
   shearer_zhang: {
@@ -125,7 +125,7 @@ function ExpertCard({
             <img src={expert.imageUrl} alt={name} className="w-full h-full object-cover" />
           </div>
           <div>
-            <div className="text-xs text-slate-500">Rank #{rank}</div>
+            <div className="text-xs text-slate-500">{t('ai.rank').replace('#', '')}#{rank}</div>
             {streak >= 3 && (
               <div className="text-xs text-orange-400 font-medium flex items-center gap-1">
                 🔥 {streak}连胜
@@ -146,14 +146,14 @@ function ExpertCard({
         <div className="space-y-3">
           <div className="bg-slate-900/50 rounded-lg p-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-slate-500">Method</span>
-              <span className="text-xs text-emerald-400 font-medium">{accuracy}% 准确</span>
+              <span className="text-xs text-slate-500">{t('ai.methodLabel')}</span>
+              <span className="text-xs text-emerald-400 font-medium">{accuracy}% {t('ai.accuracyLabel')}</span>
             </div>
             <div className="text-sm text-slate-300 truncate">{preferences}</div>
           </div>
 
           <div className="bg-slate-900/50 rounded-lg p-3">
-            <div className="text-xs text-slate-500 mb-1">Style</div>
+            <div className="text-xs text-slate-500 mb-1">{t('ai.styleLabel')}</div>
             <div className="text-sm text-slate-300">{traits}</div>
           </div>
         </div>
@@ -176,7 +176,7 @@ function ExpertCard({
             className="mt-4 w-full py-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 text-sm font-medium hover:from-amber-500/30 hover:to-orange-500/30 transition-all flex items-center justify-center gap-2"
           >
             <span>📤</span>
-            <span>分享神算子战绩</span>
+            <span>{t('ai.shareExpert')}</span>
           </button>
         )}
       </div>
@@ -207,18 +207,18 @@ export default function AIExpertsSection({
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-purple-500" />
             <h2 className="text-4xl md:text-5xl font-bold text-white">
-              {t('aiPersonas.title') || 'AI Prediction Experts'}
+              {t('aiPersonas.title')}
             </h2>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-purple-500" />
           </div>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            {t('aiPersonas.description') || 'Meet our diverse team of AI personas, each with unique prediction algorithms and football expertise'}
+            {t('aiPersonas.description')}
           </p>
           {champion && (
             <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-full">
               <span className="text-2xl">👑</span>
-              <span className="text-amber-400 font-semibold">当前神算子: {t(`aiExperts.${champion}.name`)}</span>
-              <span className="text-slate-400 text-sm">({stats[champion]?.accuracy || 0}% 准确率)</span>
+              <span className="text-amber-400 font-semibold">{t('ai.currentChampion')} {t(`aiExperts.${champion}.name`)}</span>
+              <span className="text-slate-400 text-sm">({stats[champion]?.accuracy || 0}% {t('ai.accuracyRate')})</span>
             </div>
           )}
         </div>

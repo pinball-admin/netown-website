@@ -7,12 +7,13 @@ interface DynamicAdBannerProps {
   teamId: string
   teamName: string
   teamFlag: string
-  variant?: 'top' | 'bottom' | 'inline'
+  variant?: 'top' | 'bottom' | 'inline' | 'side'
   scriptSlot?: string
   imageUrl?: string
   isScrollTriggered?: boolean
   showOnMainDashboard?: boolean
   hideIfEmpty?: boolean
+  className?: string
 }
 
 const teamAds: Record<string, {

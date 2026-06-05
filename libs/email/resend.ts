@@ -19,23 +19,79 @@ export async function sendEmail({ to, subject, html }: EmailParams) {
   const resend = new Resend(process.env.RESEND_API_KEY)
 
   try {
-    console.log('[EMAIL] Attempting to send email from: auth@send.netown.cn')
+    // Development mode: skip actual email sending, just log the code
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[EMAIL] DEV MODE: Skipping email send')
+      console.log('[EMAIL] To:', to)
+      console.log('[EMAIL] Subject:', subject)
+      // Extract verification code from HTML if present
+      const codeMatch = html.match(/<div class="code">(\d+)<\/div>/)
+      if (codeMatch) {
+        console.log('[EMAIL] Verification Code:', codeMatch[1])
+      }
+      return { success: true, devMode: true }
+    }
+      
+    console.log('[EMAIL] Attempting to send email from fallback sender')
     console.log('[EMAIL] Subject:', subject)
+      
+    // In production, try verified domain first, fall back to sandbox
+    let result = await trySend(resend, 'Netown <auth@netown.cn>', to, subject, html)
+      
+    // If production domain not verified, try sandbox
+    if (!result.success && result.error?.includes('not verified')) {
+      console.log('[EMAIL] Production domain not verified, falling back to Resend sandbox')
+      result = await trySend(resend, 'Netown <onboarding@resend.dev>', to, subject, html)
+    }
     
-    const data = await resend.emails.send({
-      from: 'Netown <auth@send.netown.cn>',
+    if (!result.success) {
+      console.error('[EMAIL] All senders failed:', result.error)
+    } else {
+      console.log('[EMAIL] Sent successfully to:', to)
+    }
+    
+    return result
+  } catch (error: any) {
+    console.error('[EMAIL] Failed to send:', error)
+    console.error('[EMAIL] Error message:', error.message)
+    console.error('[EMAIL] Error stack:', error.stack)
+    return { success: false, error: error.message || 'Unknown error' }
+  }
+}
+
+async function trySend(
+  resend: Resend,
+  from: string,
+  to: string,
+  subject: string,
+  html: string
+) {
+  try {
+    const response = await resend.emails.send({
+      from,
       to,
       subject,
       html,
     })
 
-    console.log('[EMAIL] Sent successfully to:', to)
-    console.log('[EMAIL] Response data:', JSON.stringify(data, null, 2))
-    return { success: true, data }
+    // Resend SDK v4+ returns error objects inside the response
+    // @ts-ignore - response structure varies by SDK version
+    if (response && response.error) {
+      // @ts-ignore
+      const errMsg = response.error.message || JSON.stringify(response.error)
+      console.error('[EMAIL] Resend API returned error:', errMsg)
+      return { success: false, error: errMsg }
+    }
+
+    // @ts-ignore
+    if (response && response.data && response.data.id) {
+      console.log('[EMAIL] Resend email ID:', response.data.id)
+    }
+
+    console.log('[EMAIL] Response:', JSON.stringify(response, null, 2).slice(0, 500))
+    return { success: true }
   } catch (error: any) {
-    console.error('[EMAIL] Failed to send:', error)
-    console.error('[EMAIL] Error message:', error.message)
-    console.error('[EMAIL] Error stack:', error.stack)
+    console.error('[EMAIL] trySend failed:', error.message)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }

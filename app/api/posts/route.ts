@@ -6,8 +6,10 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const posts = await prisma.post.findMany({
+      where: { masterKey: null },
       include: {
         user: true,
+        _count: { select: { comments: true } },
       },
       orderBy: {
         createdAt: 'desc',
@@ -23,7 +25,7 @@ export async function GET() {
       content: post.content,
       imageUrl: post.imageUrl,
       likes: post.likes,
-      comments: post.comments,
+      comments: post._count.comments,
       createdAt: post.createdAt,
     }))
 
