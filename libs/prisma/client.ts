@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 
 const url = process.env.DATABASE_URL || 'file:./dev.db'
 
-let prisma: PrismaClient
+let _prisma: PrismaClient | null = null
 
 function createClient() {
   if (url.startsWith('file:')) {
@@ -20,13 +20,19 @@ function createClient() {
   return new PrismaClient()
 }
 
-if (process.env.NODE_ENV === 'production') {
-  prisma = createClient()
-} else {
-  if (!(global as any).prisma) {
-    (global as any).prisma = createClient()
+function getPrisma(): PrismaClient {
+  if (!_prisma) {
+    _prisma = createClient()
   }
-  prisma = (global as any).prisma
+  return _prisma
 }
+
+// Lazy proxy: delays PrismaClient instantiation until first use
+// This prevents build-time failures when database is unreachable
+const prisma = new Proxy({} as PrismaClient, {
+  get(_, prop) {
+    return (getPrisma() as any)[prop]
+  },
+})
 
 export { prisma }
