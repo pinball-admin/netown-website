@@ -1,12 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useI18n } from '@/contexts/I18nContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
-import { useSmartPolling } from '@/hooks/useSmartPolling'
-import { usePullToRefresh } from '@/hooks/usePullToRefresh'
-import LiveScoreBadge from '@/components/football/LiveScoreBadge'
 
 interface ExpertPrediction {
   expertId: string
@@ -78,24 +75,6 @@ export default function MatchPredictionCard() {
   const [submittingMatch, setSubmittingMatch] = useState<string | null>(null)
   const [submitResult, setSubmitResult] = useState<Record<string, 'success' | 'error'>>({})
 
-  // Extract match IDs from predictions for smart polling
-  const matchIds = useMemo(() => data?.predictions.map(p => p.match.id) || [], [data])
-
-  // Smart polling for live scores
-  const { scores, liveMatches, refresh: refreshScores } = useSmartPolling({
-    matchIds,
-    enabled: !loading && matchIds.length > 0,
-  })
-
-  // Pull to refresh
-  const { containerRef, PullIndicator } = usePullToRefresh({
-    onRefresh: async () => {
-      await fetchPredictions()
-      refreshScores()
-    },
-    disabled: loading,
-  })
-
   const buildShareUrl = (pred: MatchPrediction) => {
     const params = new URLSearchParams({
       type: 'match',
@@ -114,61 +93,33 @@ export default function MatchPredictionCard() {
     return `${window.location.origin}/api/og?${params.toString()}`
   }
 
-  const buildViralShareText = (pred: MatchPrediction): string => {
-    const { homeTeam, awayTeam } = pred.match
-    const { predictedScore, confidence } = pred.consensus
-    const matchDate = new Date(pred.match.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    return [
-      `🤖 AI Oracle predicts: ${homeTeam.name} ${predictedScore.home}-${predictedScore.away} ${awayTeam.name}`,
-      `Confidence: ${confidence}% | ${matchDate}`,
-      '',
-      `Can you beat the AI? Make your own prediction at Netown!`,
-      `#WorldCup2026 #Netown #AIPredictions`,
-    ].join('\n')
-  }
-
   const handleShare = async (pred: MatchPrediction) => {
     const shareUrl = buildShareUrl(pred)
-    const text = buildViralShareText(pred)
+    const text = `AI Oracle predicts ${pred.match.homeTeam.name} vs ${pred.match.awayTeam.name}: ${pred.consensus.predictedScore.home}-${pred.consensus.predictedScore.away} (${pred.consensus.confidence}% confidence)`
+    const pageUrl = `${window.location.origin}/football`
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Netown AI: ${pred.match.homeTeam.name} vs ${pred.match.awayTeam.name}`,
+          title: 'Netown AI Prediction',
           text,
-          url: shareUrl,
+          url: pageUrl,
         })
       } catch {}
     } else {
       // Fallback: copy link
-      await navigator.clipboard.writeText(`${text}\n\n${shareUrl}`)
+      await navigator.clipboard.writeText(`${text}\n${pageUrl}`)
       toast(t('toast.linkCopied'), 'info')
     }
   }
 
   const handleShareTwitter = (pred: MatchPrediction) => {
-    const shareUrl = buildShareUrl(pred)
-    const text = encodeURIComponent(buildViralShareText(pred).substring(0, 240))
-    const ogUrl = encodeURIComponent(shareUrl)
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${ogUrl}`, '_blank')
+    const text = encodeURIComponent(`AI Oracle predicts ${pred.match.homeTeam.name} vs ${pred.match.awayTeam.name}: ${pred.consensus.predictedScore.home}-${pred.consensus.predictedScore.away} (${pred.consensus.confidence}% confidence)`)
+    const pageUrl = encodeURIComponent(`${window.location.origin}/football`)
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${pageUrl}`, '_blank')
   }
 
-  const handleShareWhatsApp = (pred: MatchPrediction) => {
-    const shareUrl = buildShareUrl(pred)
-    const text = encodeURIComponent(
-      `${buildViralShareText(pred)}\n\n${shareUrl}`
-    )
-    window.open(`https://wa.me/?text=${text}`, '_blank')
-  }
-
-  const handleShareTelegram = (pred: MatchPrediction) => {
-    const shareUrl = buildShareUrl(pred)
-    const ogUrl = encodeURIComponent(shareUrl)
-    const text = encodeURIComponent(buildViralShareText(pred).substring(0, 200))
-    window.open(`https://t.me/share/url?url=${ogUrl}&text=${text}`, '_blank')
-  }
-
-  const handleUserPredict = async (matchId: string, winner: 'home' | 'draw' | 'away', score: string, reasoning: string, homeTeam: string, awayTeam: string) => {
+  const handleUserPredict = async (matchId: string, winner: 'home' | 'draw' | 'away', score: string) => {
     if (!isLoggedIn) return
     setSubmittingMatch(matchId)
     try {
@@ -178,10 +129,7 @@ export default function MatchPredictionCard() {
         body: JSON.stringify({
           matchId,
           type: 'MATCH_RESULT',
-          prediction: winner === 'home' ? 'home_win' : winner === 'away' ? 'away_win' : 'draw',
-          reasoning: reasoning || undefined,
-          homeTeam,
-          awayTeam,
+          prediction: { winner, score, userId: user?.id }
         })
       })
       const json = await res.json()
@@ -284,8 +232,7 @@ export default function MatchPredictionCard() {
   }
 
   return (
-    <div ref={containerRef} className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
-      <PullIndicator />
+    <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
       {/* Header */}
       <div className="flex justify-between items-center mb-3">
         <h2 className="text-lg font-semibold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
@@ -341,15 +288,6 @@ export default function MatchPredictionCard() {
                     <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full font-medium">
                       {pred.match.group}
                     </span>
-                    {/* Live score badge if match is live */}
-                    {scores[pred.match.id]?.status && scores[pred.match.id]?.status !== 'scheduled' && (
-                      <LiveScoreBadge status={scores[pred.match.id].status as 'live' | 'ht' | 'ft'} />
-                    )}
-                    {liveMatches.includes(pred.match.id) && (
-                      <span className="text-xs text-red-400 font-bold ml-1">
-                        {scores[pred.match.id]?.home ?? 0} - {scores[pred.match.id]?.away ?? 0}
-                      </span>
-                    )}
                     <span className="text-slate-500 text-xs">
                       {pred.match.date} · {pred.match.time}
                     </span>
@@ -491,24 +429,6 @@ export default function MatchPredictionCard() {
                         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                       </svg>
                     </button>
-                    <button
-                      onClick={() => handleShareWhatsApp(pred)}
-                      className="p-1.5 rounded-lg bg-slate-800/60 text-slate-400 hover:text-green-400 hover:bg-slate-700/60 transition-colors"
-                      title="Share on WhatsApp"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleShareTelegram(pred)}
-                      className="p-1.5 rounded-lg bg-slate-800/60 text-slate-400 hover:text-sky-500 hover:bg-slate-700/60 transition-colors"
-                      title="Share on Telegram"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                      </svg>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -596,23 +516,7 @@ export default function MatchPredictionCard() {
                       userPick={userPredictions[pred.match.id]}
                       submitting={submittingMatch === pred.match.id}
                       result={submitResult[pred.match.id]}
-                      onPredict={(winner, score, reasoning) => handleUserPredict(pred.match.id, winner, score, reasoning, pred.match.homeTeam.name, pred.match.awayTeam.name)}
-                      onShare={(winner, score) => {
-                        const shareText = [
-                          `⚽ My #WorldCup2026 prediction!`,
-                          `${pred.match.homeTeam.name} vs ${pred.match.awayTeam.name}: ${winner === 'home' ? pred.match.homeTeam.name : winner === 'away' ? pred.match.awayTeam.name : 'Draw'}`,
-                          score ? `Score: ${score}` : '',
-                          '',
-                          `Can you beat me? Make your predictions at Netown!`,
-                          '#Netown #AIPredictions',
-                        ].filter(Boolean).join('\n')
-                        const shareUrl = `${window.location.origin}/football`
-                        if (navigator.share) {
-                          navigator.share({ title: `My Netown Prediction`, text: shareText })
-                        } else {
-                          navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`).then(() => toast(t('toast.linkCopied'), 'info'))
-                        }
-                      }}
+                      onPredict={(winner, score) => handleUserPredict(pred.match.id, winner, score)}
                       t={t}
                     />
                   </div>
@@ -650,7 +554,6 @@ function UserPKCard({
   submitting,
   result,
   onPredict,
-  onShare,
   t,
 }: {
   matchId: string
@@ -661,13 +564,11 @@ function UserPKCard({
   userPick?: { winner: string; score: string }
   submitting: boolean
   result?: 'success' | 'error'
-  onPredict: (winner: 'home' | 'draw' | 'away', score: string, reasoning: string) => void
-  onShare?: (winner: string, score: string) => void
+  onPredict: (winner: 'home' | 'draw' | 'away', score: string) => void
   t: (key: string) => string
 }) {
   const [pick, setPick] = useState<'home' | 'draw' | 'away' | null>(null)
   const [score, setScore] = useState('')
-  const [reasoning, setReasoning] = useState('')
 
   // Count how many experts agree with user
   const agreementCount = pick
@@ -713,16 +614,6 @@ function UserPKCard({
             <span className="text-slate-400">{t('pred.agreeWithYou')}</span>
             <span className="text-cyan-400 font-medium">{agreementCount}/5 {t('pred.experts')}</span>
           </div>
-          {/* Share prediction result */}
-          <button
-            onClick={() => onShare?.(w || pick || 'draw', s || '')}
-            className="w-full mt-2 py-1.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-[9px] font-bold rounded hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-            Share Prediction
-          </button>
         </div>
       </div>
     )
@@ -759,16 +650,8 @@ function UserPKCard({
           placeholder="2-1"
           className="w-full px-2 py-1 bg-slate-800/60 border border-slate-700 rounded text-[10px] text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none"
         />
-        <textarea
-          value={reasoning}
-          onChange={e => setReasoning(e.target.value)}
-          placeholder="写分析理由（选填）..."
-          maxLength={1000}
-          rows={4}
-          className="w-full px-2 py-1 bg-slate-800/60 border border-slate-700 rounded text-[10px] text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none resize-none"
-        />
         <button
-          onClick={() => pick && onPredict(pick, score, reasoning)}
+          onClick={() => pick && onPredict(pick, score)}
           disabled={!pick || submitting}
           className="w-full py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] font-bold rounded hover:opacity-90 disabled:opacity-40 transition-opacity"
         >

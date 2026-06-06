@@ -44,7 +44,6 @@ export function middleware(request: NextRequest) {
     const originalPath = '/' + pathParts.slice(1).join('/') || '/'
 
     const response = NextResponse.rewrite(new URL(originalPath + search, request.url))
-    
     response.headers.set('x-locale', locale)
     response.headers.set('x-original-path', originalPath)
     response.headers.set('x-geolocation', countryCode)

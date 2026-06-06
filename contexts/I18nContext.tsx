@@ -58,25 +58,12 @@ const I18nContext = createContext<I18nContextType>({
 const SUPPORTED_LOCALES: Language[] = ['en', 'es', 'de', 'it', 'ja', 'ko', 'pt', 'zh']
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    if (typeof window !== 'undefined') {
-      // 1. URL locale takes priority
-      const pathParts = window.location.pathname.split('/').filter(Boolean)
-      const urlLocale = pathParts[0] as Language
-      if (SUPPORTED_LOCALES.includes(urlLocale)) {
-        localStorage.setItem('netown_language', urlLocale)
-        return urlLocale
-      }
-      // 2. Saved preference
-      const saved = localStorage.getItem('netown_language') as Language | null
-      if (saved && langModules[saved]) return saved
-      // 3. Geo hint
-      const isCN = localStorage.getItem('netown_is_cn') === 'true'
-      if (isCN) return 'zh'
-      return 'en'
-    }
-    return 'en'
-  })
+  // ALWAYS start with 'en' for SSR + first client render (hydration)
+  // This ensures NO hydration mismatch — server and client render the same HTML
+  // After hydration, a useEffect runs to detect the correct language and switch
+  const [language, setLanguage] = useState<Language>('en')
+
+  const [mounted, setMounted] = useState(false)
 
   // Active translations + loading state
   const [activeTranslations, setActiveTranslations] = useState<Translation>(en)
@@ -108,6 +95,25 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   // Load on mount
   useEffect(() => {
     loadLanguage(language)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // After hydration, detect the correct language from URL / localStorage / geo
+  useEffect(() => {
+    const pathParts = window.location.pathname.split('/').filter(Boolean)
+    const urlLocale = pathParts[0] as Language
+    if (SUPPORTED_LOCALES.includes(urlLocale)) {
+      localStorage.setItem('netown_language', urlLocale)
+      setLanguage(urlLocale)
+      if (urlLocale !== 'en') loadLanguage(urlLocale)
+    } else {
+      // Check saved preference
+      const saved = localStorage.getItem('netown_language') as Language | null
+      if (saved && saved !== 'en' && langModules[saved]) {
+        setLanguage(saved)
+        loadLanguage(saved)
+      }
+    }
+    setMounted(true)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [geoChecked, setGeoChecked] = useState(false)
