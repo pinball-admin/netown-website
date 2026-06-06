@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       to: email,
       subject: 'Your Netown Verification Code',
       html: generateVerificationEmail(code),
-    })
+    }) as { success: boolean; error?: any; devMode?: boolean }
 
     if (!emailResult.success) {
       console.error('[AUTH] Failed to send email:', emailResult.error)

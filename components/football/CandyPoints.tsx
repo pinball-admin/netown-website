@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useI18n } from '@/contexts/I18nContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
+import { useLeaderboard, useDailyCheckin } from '@/libs/data/swr-hooks'
 
 export default function CandyPoints() {
   const { t } = useI18n()
@@ -11,61 +12,40 @@ export default function CandyPoints() {
   const { toast } = useToast()
   const [checkedIn, setCheckedIn] = useState(false)
   const [checkingIn, setCheckingIn] = useState(false)
-  const [leaderboardData, setLeaderboardData] = useState<Array<{
-    rank: number
-    name: string
-    score: number
-    isCurrentUser: boolean
-  }>>([])
+
+  // SWR hooks
+  const { data: lbData } = useLeaderboard(5)
+  const { trigger: doCheckin } = useDailyCheckin()
 
   const candy = user?.candyBalance || 0
   const streak = user?.currentStreak || 0
 
-  // Fetch leaderboard from API
-  const fetchLeaderboard = useCallback(async () => {
-    try {
-      const res = await fetch('/api/leaderboard')
-      if (res.ok) {
-        const data = await res.json()
-        if (data.success && data.leaderboard) {
-          setLeaderboardData(
-            data.leaderboard.slice(0, 5).map((u: any, i: number) => ({
-              rank: i + 1,
-              name: u.name,
-              score: u.candyBalance,
-              isCurrentUser: u.userId === user?.id,
-            }))
-          )
-        }
-      }
-    } catch {
-      // Fallback: show current user only
-      if (user) {
-        setLeaderboardData([
-          { rank: 1, name: user.name, score: user.candyBalance, isCurrentUser: true },
-        ])
-      }
-    }
-  }, [user?.id])
+  // Leaderboard from SWR
+  const leaderboardData = lbData?.success
+    ? lbData.leaderboard.slice(0, 5).map((u: any, i: number) => ({
+        rank: i + 1,
+        name: u.name,
+        score: u.candyBalance,
+        isCurrentUser: u.userId === user?.id,
+      }))
+    : []
 
   useEffect(() => {
     if (isLoggedIn) {
-      fetchLeaderboard()
       // Check if already checked in today
       const today = new Date().toISOString().split('T')[0]
       if (user?.lastLoginDate === today) {
         setCheckedIn(true)
       }
     }
-  }, [isLoggedIn, user?.lastLoginDate, fetchLeaderboard])
+  }, [isLoggedIn, user?.lastLoginDate])
 
   const handleCheckIn = async () => {
     if (checkedIn || checkingIn || !isLoggedIn) return
 
     setCheckingIn(true)
     try {
-      const res = await fetch('/api/candy/daily-login', { method: 'POST' })
-      const data = await res.json()
+      const data = await doCheckin()
 
       if (data.success) {
         setCheckedIn(true)
@@ -75,10 +55,7 @@ export default function CandyPoints() {
             : t('candyPoints.checkedIn'),
           'success'
         )
-        // Refresh user data to get updated balance
         await refreshUser()
-        // Refresh leaderboard
-        await fetchLeaderboard()
       }
     } catch (error) {
       console.error('Check-in failed:', error)
@@ -170,7 +147,7 @@ export default function CandyPoints() {
           </h2>
 
           <div className="space-y-2">
-            {displayLeaderboard.map((entry, index) => (
+            {displayLeaderboard.map((entry: any, index: number) => (
               <div
                 key={entry.rank}
                 className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${

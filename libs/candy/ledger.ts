@@ -6,11 +6,15 @@ import { prisma } from '@/libs/prisma/client'
 export type TransactionType =
   | 'SIGNUP'
   | 'DAILY_LOGIN'
+  | 'DAILY_QUIZ'
   | 'COMMUNITY_POST'
   | 'PREDICTION_CORRECT'
   | 'PREDICTION_BONUS'
+  | 'REFERRAL'
   | 'CONVERSION'
   | 'ADMIN_ADJUSTMENT'
+  | 'BRACKET_ENTRY'
+  | 'TERRITORY_CREATE'
 
 export interface CandyTransactionResult {
   id: string
@@ -139,6 +143,29 @@ export async function processDailyLogin(
 }
 
 /**
+ * Process daily quiz answer: award candy if correct
+ */
+export async function processDailyQuizReward(
+  userId: string,
+  isCorrect: boolean,
+  quizId: string
+): Promise<number> {
+  if (!isCorrect) return 0
+
+  const baseReward = 15
+
+  await createTransaction(
+    userId,
+    'DAILY_QUIZ',
+    baseReward,
+    'Daily quiz correct!',
+    quizId
+  )
+
+  return baseReward
+}
+
+/**
  * Award candy for community actions (post, comment, like)
  */
 export async function awardCommunityBoost(
@@ -254,31 +281,108 @@ export async function checkMasterPromotion(userId: string): Promise<boolean> {
 
 /**
  * Get leaderboard: top users by prediction accuracy (min 5 predictions)
+ * Supports period filtering: 'weekly', 'monthly', 'alltime'
  */
-export async function getLeaderboard(limit: number = 20) {
-  const users = await prisma.user.findMany({
-    where: { totalPredictions: { gte: 5 } },
-    orderBy: [
-      { correctPredictions: 'desc' },
-      { candyBalance: 'desc' },
-    ],
-    take: limit,
+export async function getLeaderboard(limit: number = 20, period: 'weekly' | 'monthly' | 'alltime' = 'alltime') {
+  if (period === 'alltime') {
+    // Fast path: use pre-computed counts on User model
+    const users = await prisma.user.findMany({
+      where: { totalPredictions: { gte: 5 } },
+      orderBy: [
+        { correctPredictions: 'desc' },
+        { candyBalance: 'desc' },
+      ],
+      take: limit,
+    })
+
+    return users.map((user, index) => ({
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      candyBalance: user.candyBalance,
+      totalPredictions: user.totalPredictions,
+      correctPredictions: user.correctPredictions,
+      accuracy:
+        user.totalPredictions > 0
+          ? Math.round((user.correctPredictions / user.totalPredictions) * 100)
+          : 0,
+      role: user.role,
+      ranking: index + 1,
+    }))
+  }
+
+  // For weekly/monthly, count predictions within time range
+  const now = new Date()
+  const since = period === 'weekly'
+    ? new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+  // Aggregate predictions by user within the time period
+  const stats = await prisma.userPrediction.groupBy({
+    by: ['userId'],
+    where: { createdAt: { gte: since } },
+    _count: { id: true },
+    _sum: { pointsAwarded: true },
   })
 
-  return users.map((user, index) => ({
-    userId: user.id,
-    name: user.name,
-    email: user.email,
-    candyBalance: user.candyBalance,
-    totalPredictions: user.totalPredictions,
-    correctPredictions: user.correctPredictions,
-    accuracy:
-      user.totalPredictions > 0
-        ? Math.round((user.correctPredictions / user.totalPredictions) * 100)
+  // Get correct counts
+  const correctStats = await prisma.userPrediction.groupBy({
+    by: ['userId'],
+    where: { createdAt: { gte: since }, isCorrect: true },
+    _count: { id: true },
+  })
+
+  const correctMap = new Map(correctStats.map(s => [s.userId, s._count.id]))
+
+  // Filter to users with at least 3 predictions in period
+  const qualified = stats.filter(s => s._count.id >= 3)
+
+  // Sort by correct count desc, then points
+  qualified.sort((a, b) => {
+    const aCorrect = correctMap.get(a.userId) || 0
+    const bCorrect = correctMap.get(b.userId) || 0
+    if (bCorrect !== aCorrect) return bCorrect - aCorrect
+    return (b._sum.pointsAwarded || 0) - (a._sum.pointsAwarded || 0)
+  })
+
+  const topUsers = qualified.slice(0, limit)
+
+  // Fetch user details
+  const userIds = topUsers.map(s => s.userId)
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      candyBalance: true,
+      totalPredictions: true,
+      correctPredictions: true,
+      role: true,
+    },
+  })
+
+  const userMap = new Map(users.map(u => [u.id, u]))
+
+  return topUsers.map((stat, index) => {
+    const user = userMap.get(stat.userId)
+    const totalInPeriod = stat._count.id
+    const correctInPeriod = correctMap.get(stat.userId) || 0
+
+    return {
+      userId: stat.userId,
+      name: user?.name || 'Unknown',
+      email: user?.email || '',
+      candyBalance: user?.candyBalance || 0,
+      totalPredictions: totalInPeriod,
+      correctPredictions: correctInPeriod,
+      accuracy: totalInPeriod > 0
+        ? Math.round((correctInPeriod / totalInPeriod) * 100)
         : 0,
-    role: user.role,
-    ranking: index + 1,
-  }))
+      role: user?.role || 'user',
+      ranking: index + 1,
+    }
+  })
 }
 
 /**

@@ -13,6 +13,9 @@ import AdSenseAd from '@/components/football/AdSenseAd'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import ScrollToTop from '@/components/ui/ScrollToTop'
 import PageTransition from '@/components/ui/PageTransition'
+import CountdownBanner from '@/components/football/CountdownBanner'
+import DailyQuizCard from '@/components/football/DailyQuizCard'
+import LiveScoreBoard from '@/components/football/LiveScoreBoard'
 
 export default function FootballPage() {
   const { t } = useI18n()
@@ -38,6 +41,9 @@ export default function FootballPage() {
       <PageTransition>
         <main className="pt-16 pb-20 md:pb-8 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            {/* Match Countdown Banner */}
+            <CountdownBanner />
+
             {/* Hero Section with Countdown */}
             <ErrorBoundary>
               <HeroSection />
@@ -54,6 +60,16 @@ export default function FootballPage() {
                 </p>
               </div>
             </div>
+
+            {/* Daily Quiz Card */}
+            <ErrorBoundary>
+              <DailyQuizCard />
+            </ErrorBoundary>
+
+            {/* Live Scores */}
+            <ErrorBoundary>
+              <LiveScoreBoard />
+            </ErrorBoundary>
 
             {/* 70% Main Content + 30% Sidebar Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
@@ -76,7 +92,7 @@ export default function FootballPage() {
       </PageTransition>
 
       {/* Google AdSense - Bottom Banner Ad */}
-      <AdSenseAd adSlot="" adFormat="horizontal" className="mt-6" />
+      <AdSenseAd adSlot="1234567890" adFormat="horizontal" className="mt-6" />
 
       <MobileBottomNav />
       <ScrollToTop />

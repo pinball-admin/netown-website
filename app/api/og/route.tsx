@@ -17,6 +17,8 @@ export const dynamic = 'force-dynamic'
  *   /api/og?type=match&home=Argentina&away=Brazil&hWin=45&draw=25&aWin=30&score=2-1&confidence=78
  *   /api/og?type=settlement&home=ARG&away=BRA&hScore=3&aScore=1&settled=24&correct=18
  *   /api/og?type=leaderboard&name=Player&rank=5&accuracy=72&candy=1250&streak=3
+ *   /api/og?type=prediction&home=Argentina&away=Brazil&hFlag=🇦🇷&aFlag=🇧🇷
+ *        &prediction=2-1&status=correct&points=15&username=Fan123
  */
 
 const W = 1200
@@ -38,6 +40,9 @@ export async function GET(request: Request) {
         break
       case 'leaderboard':
         svg = leaderboardSVG(searchParams)
+        break
+      case 'prediction':
+        svg = predictionSVG(searchParams)
         break
       case 'match':
       default:
@@ -113,6 +118,9 @@ function matchSVG(p: URLSearchParams): string {
 
   ${date ? `<text x="${W - 48}" y="70" font-size="14" font-family="system-ui,sans-serif" fill="#475569" text-anchor="end">📅 ${esc(date)}</text>` : ''}
 
+  <!-- Timestamp -->
+  <text x="${W - 48}" y="92" font-size="11" font-family="system-ui,sans-serif" fill="#334155" text-anchor="end">⏱ Generated ${new Date().toISOString().substring(0, 16).replace('T', ' ')} UTC</text>
+
   <!-- Teams -->
   <g transform="translate(0, 140)">
     <!-- Home -->
@@ -161,7 +169,8 @@ function matchSVG(p: URLSearchParams): string {
   <!-- Bottom -->
   ${venue ? `<text x="80" y="${H - 50}" font-size="14" font-family="system-ui,sans-serif" fill="#475569">🏟 ${esc(venue)}</text>` : ''}
   <text x="80" y="${H - 28}" font-size="14" font-family="system-ui,sans-serif" fill="#334155">netown.ai/football</text>
-  <text x="${W - 80}" y="${H - 28}" font-size="14" font-family="system-ui,sans-serif" fill="#475569" text-anchor="end">Powered by AI Oracle</text>
+  <text x="${W - 80}" y="${H - 28}" font-size="11" font-family="system-ui,sans-serif" fill="#475569" text-anchor="end">⏱ ${new Date().toISOString().substring(0, 16).replace('T', ' ')} UTC</text>
+  <text x="${W - 80}" y="${H - 50}" font-size="14" font-family="system-ui,sans-serif" fill="#475569" text-anchor="end">Powered by AI Oracle</text>
 </svg>`
 }
 
@@ -312,6 +321,84 @@ function leaderboardSVG(p: URLSearchParams): string {
   </g>
 
   <text x="80" y="${H - 28}" font-size="14" font-family="system-ui,sans-serif" fill="#334155">netown.ai/leaderboard</text>
+  <text x="${W - 80}" y="${H - 28}" font-size="14" font-family="system-ui,sans-serif" fill="#475569" text-anchor="end">World Cup 2026</text>
+</svg>`
+}
+
+function predictionSVG(p: URLSearchParams): string {
+  const home = p.get('home') || 'Home'
+  const away = p.get('away') || 'Away'
+  const hFlag = p.get('hFlag') || '⚽'
+  const aFlag = p.get('aFlag') || '⚽'
+  const prediction = p.get('prediction') || '?'
+  const pType = p.get('typeLabel') || 'MATCH_RESULT'
+  const status = p.get('status') || 'pending'
+  const points = p.get('points') || '0'
+  const username = p.get('username') || 'Player'
+
+  const isCorrect = status === 'correct'
+  const isPending = status === 'pending'
+  const statusEmoji = isCorrect ? '✅' : isPending ? '⏳' : '❌'
+  const statusColor = isCorrect ? '#22c55e' : isPending ? '#eab308' : '#ef4444'
+  const statusText = isCorrect ? 'Correct' : isPending ? 'Pending' : 'Incorrect'
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="35%" stop-color="#1e1b4b"/>
+      <stop offset="70%" stop-color="#030712"/>
+      <stop offset="100%" stop-color="#1c1917"/>
+    </linearGradient>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="${statusColor}"/>
+      <stop offset="100%" stop-color="${isCorrect ? '#06b6d4' : isPending ? '#f97316' : '#ef4444'}"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bg)"/>
+  <circle cx="0" cy="0" r="200" fill="rgba(34,197,94,0.05)"/>
+  <circle cx="${W}" cy="${H}" r="200" fill="rgba(99,102,241,0.04)"/>
+
+  <!-- Header -->
+  <text x="48" y="60" font-size="36">🏆</text>
+  <text x="100" y="52" font-size="28" font-weight="800" font-family="system-ui,sans-serif" fill="url(#titleGrad)">Netown Prediction</text>
+  <text x="100" y="76" font-size="16" font-family="system-ui,sans-serif" fill="#94a3b8">User Prediction Result</text>
+
+  <!-- Status Badge -->
+  <g transform="translate(${W - 160}, 40)">
+    <rect x="0" y="0" width="130" height="36" rx="18" fill="rgba(30,41,59,0.6)" stroke="${statusColor}40" stroke-width="1"/>
+    <text x="65" y="24" font-size="18" font-weight="700" font-family="system-ui,sans-serif" fill="${statusColor}" text-anchor="middle">${statusEmoji} ${esc(statusText)}</text>
+  </g>
+
+  <!-- Teams -->
+  <g transform="translate(0, 150)">
+    <text x="${W / 2 - 200}" y="0" font-size="72" text-anchor="middle">${esc(hFlag)}</text>
+    <text x="${W / 2 - 200}" y="80" font-size="32" font-weight="700" font-family="system-ui,sans-serif" fill="#f8fafc" text-anchor="middle">${esc(home)}</text>
+
+    <text x="${W / 2}" y="10" font-size="18" font-family="system-ui,sans-serif" fill="#64748b" text-anchor="middle">VS</text>
+    <text x="${W / 2}" y="60" font-size="34" font-weight="900" font-family="system-ui,sans-serif" fill="${statusColor}" text-anchor="middle">${esc(prediction)}</text>
+    <text x="${W / 2}" y="85" font-size="12" font-family="system-ui,sans-serif" fill="#64748b" text-anchor="middle">${esc(pType.replace(/_/g, ' '))}</text>
+
+    <text x="${W / 2 + 200}" y="0" font-size="72" text-anchor="middle">${esc(aFlag)}</text>
+    <text x="${W / 2 + 200}" y="80" font-size="32" font-weight="700" font-family="system-ui,sans-serif" fill="#f8fafc" text-anchor="middle">${esc(away)}</text>
+  </g>
+
+  <!-- User Info + Points -->
+  <g transform="translate(0, 290)">
+    <!-- Username -->
+    <text x="${W / 2}" y="0" font-size="22" font-weight="600" font-family="system-ui,sans-serif" fill="#e2e8f0" text-anchor="middle">${esc(username)}</text>
+
+    <!-- Points earned (only if correct) -->
+    ${isCorrect && parseInt(points) > 0 ? `
+    <g transform="translate(${W / 2}, 40)">
+      <rect x="-60" y="0" width="120" height="40" rx="20" fill="rgba(251,191,36,0.15)" stroke="rgba(251,191,36,0.3)" stroke-width="1"/>
+      <text x="0" y="26" font-size="22" font-weight="800" font-family="system-ui,sans-serif" fill="#fbbf24" text-anchor="middle">+${esc(points)} 🍬</text>
+    </g>` : ''}
+  </g>
+
+  <!-- Bottom -->
+  <text x="80" y="${H - 28}" font-size="14" font-family="system-ui,sans-serif" fill="#334155">netown.ai/football</text>
   <text x="${W - 80}" y="${H - 28}" font-size="14" font-family="system-ui,sans-serif" fill="#475569" text-anchor="end">World Cup 2026</text>
 </svg>`
 }

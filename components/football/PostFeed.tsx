@@ -121,7 +121,15 @@ export default function PostFeed() {
   const [newComment, setNewComment] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { user, isLoggedIn } = useAuth()
-  const { t } = useI18n()
+  const { t, language } = useI18n()
+
+  // Get translated content for current language
+  const getDisplayContent = (post: any) => {
+    if (post.translations && post.translations[language]) {
+      return post.translations[language]
+    }
+    return post.content
+  }
 
   useEffect(() => {
     fetchPosts()
@@ -139,7 +147,7 @@ export default function PostFeed() {
           author: p.author,
           avatar: p.avatar || '⚽',
           country: p.country || '🌍',
-          content: p.content,
+          content: getDisplayContent(p),
           imageUrl: p.imageUrl || FOOTBALL_IMAGES[Math.floor(Math.random() * FOOTBALL_IMAGES.length)],
           likes: p.likes || 0,
           comments: [],
@@ -232,6 +240,27 @@ export default function PostFeed() {
     }
   }
 
+  const handleSharePost = async (post: Post) => {
+    const shareDate = new Date(post.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    const text = [
+      `⚽ Netown Football Discussion`,
+      post.content.substring(0, 150),
+      `Posted: ${shareDate}`,
+      '',
+      `Join the conversation at Netown!`,
+      '#WorldCup2026 #Netown',
+    ].join('\n')
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Netown Football', text, url: window.location.href })
+      } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${text}\n\n${window.location.href}`)
+      } catch {}
+    }
+  }
+
   return (
     <div className="space-y-6">
       {loading ? (
@@ -316,7 +345,10 @@ export default function PostFeed() {
                   {post.comments.length > 0 ? post.comments.length : (post.commentCount ?? 0)} {t('ui.comments')}
                 </span>
               </button>
-              <button className="flex items-center gap-2 text-slate-400 hover:text-green-400 transition-colors">
+              <button
+                onClick={() => handleSharePost(post)}
+                className="flex items-center gap-2 text-slate-400 hover:text-green-400 transition-colors"
+              >
                 <span className="text-xl">🔄</span>
                 <span className="text-sm font-medium">{t('ui.share')}</span>
               </button>

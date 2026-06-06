@@ -23,6 +23,8 @@ export async function GET() {
       avatar: '⚽',
       country: '🌍',
       content: post.content,
+      sourceLanguage: post.sourceLanguage,
+      translations: post.translations,
       imageUrl: post.imageUrl,
       likes: post.likes,
       comments: post._count.comments,

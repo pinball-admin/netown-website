@@ -4,13 +4,14 @@ import bcrypt from 'bcryptjs'
 import { generateToken } from '@/libs/auth/jwt'
 import { prisma } from '@/libs/prisma/client'
 import { createTransaction } from '@/libs/candy/ledger'
+import { processReferral } from '@/libs/referral'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
-    const { email, code } = await request.json()
+    const { email, code, referralCode } = await request.json()
 
     if (!email || !code) {
       return NextResponse.json(
@@ -87,6 +88,11 @@ export async function POST(request: Request) {
 
       // Award signup bonus candy
       await createTransaction(user.id, 'SIGNUP', 100, 'Welcome bonus for new user')
+
+      // Process referral if provided
+      if (referralCode) {
+        await processReferral(user.id, referralCode)
+      }
     } else {
       user = await prisma.user.update({
         where: { email },
@@ -118,6 +124,7 @@ export async function POST(request: Request) {
         email: user.email,
         name: user.name,
         region: user.region,
+        role: user.role,
         candyBalance: user.candyBalance,
         isNewUser,
       },

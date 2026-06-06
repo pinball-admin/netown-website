@@ -40,7 +40,11 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      user,
+      user: {
+        ...user,
+        displayName: user.displayName || user.name,
+        preferredLanguage: user.preferredLanguage || 'en',
+      },
     })
   } catch (error) {
     console.error('[AUTH] Failed to get user:', error)

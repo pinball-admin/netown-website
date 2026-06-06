@@ -6,13 +6,18 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model User {
   id                    String    @id @default(cuid())
   email                 String    @unique
   name                  String
+  passwordHash          String?
+  displayName           String?
+  bio                   String?
+  avatarUrl             String?
+  preferredLanguage     String    @default("en")
   region                String    @default("GLOBAL")
   role                  String    @default("user")  // 'user' | 'master' | 'admin'
   candyBalance          Int       @default(100)
@@ -25,6 +30,10 @@ model User {
   createdAt             DateTime  @default(now())
   isVerified            Boolean   @default(false)
   predictionUnlockUntil DateTime?
+  referralCode          String?   @unique
+  referredById          String?
+  referredBy            User?     @relation("Referrals", fields: [referredById], references: [id])
+  referrals             User[]    @relation("Referrals")
   posts                 Post[]
   comments              Comment[]
   predictions           UserPrediction[]
@@ -32,6 +41,15 @@ model User {
   reactions             PostReaction[]
   achievements          UserAchievement[]
   pushSubscriptions     PushSubscription[]
+  quizAttempts          DailyQuizAttempt[]
+  followers             Follow[]     @relation("following")
+  following             Follow[]     @relation("follower")
+  bracketEntries        BracketEntry[]
+  territoryMembers      TerritoryMember[]
+  claimedTerritory      Territory[]
+  ownedSections         TerritorySection[]    @relation("SectionOwner")
+  approvedSections      TerritorySection[]    @relation("SectionApprover")
+  sectionMemberships    TerritorySectionMember[]
 }
 
 model VerificationToken {
@@ -60,13 +78,19 @@ model Post {
   userId     String
   content    String
   imageUrl   String?
+  sourceLanguage String @default("en")
+  translations  String  @default("{}")
   masterKey  String?   @unique
+  sectionId  String?
   likes      Int       @default(0)
   createdAt  DateTime  @default(now())
 
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  section    TerritorySection? @relation(fields: [sectionId], references: [id])
   comments   Comment[]
   reactions  PostReaction[]
+
+  @@index([sectionId])
 }
 
 model Comment {
@@ -125,6 +149,7 @@ model UserPrediction {
   matchId         String
   predictionType  String   // 'MATCH_RESULT' | 'SCORE' | 'OVER_UNDER' | 'TOTAL_GOALS'
   prediction      String   // The actual prediction value (e.g., 'home_win', '2-1', 'over_2.5', '3')
+  reasoning       String?  // Optional user analysis/justification
   difficulty      String   @default("easy")  // 'easy' | 'medium' | 'hard'
   isCorrect       Boolean?
   pointsAwarded   Int      @default(0)
@@ -135,4 +160,162 @@ model UserPrediction {
 
   @@index([userId, matchId])
   @@index([matchId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String                    // The user who follows
+  followingId String                    // The user being followed
+  createdAt   DateTime @default(now())
+
+  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model BracketEntry {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  totalScore      Int      @default(0)
+  candyCost       Int      @default(100)
+  isSubmitted     Boolean  @default(false)
+  submittedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  picks           BracketPick[]
+}
+
+model BracketPick {
+  id              String   @id @default(cuid())
+  bracketId       String
+  matchSlot       String                  // e.g., "r16-1", "qf-1", "sf-1", "final"
+  round           String                  // "round_of_16", "quarter_final", "semi_final", "final"
+  pickedTeamId    String                  // Team ID (e.g., "ARG", "BRA")
+  pickedTeamName  String                  // Team name for display
+  isCorrect       Boolean?
+  pointsEarned    Int      @default(0)
+  settledAt       DateTime?
+  createdAt       DateTime @default(now())
+
+  bracket         BracketEntry @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+
+  @@unique([bracketId, matchSlot])
+}
+
+model DailyQuiz {
+  id             String   @id @default(cuid())
+  date           String   @unique  // YYYY-MM-DD
+  question       String
+  options        Json              // string[4] - 4 answer options
+  correctOption  Int               // 0-3 index of correct answer
+  explanation    String
+  funFact        String?
+  year           Int               // Related World Cup year
+  createdAt      DateTime @default(now())
+
+  attempts       DailyQuizAttempt[]
+}
+
+model DailyQuizAttempt {
+  id             String   @id @default(cuid())
+  userId         String
+  quizId         String
+  selectedOption Int
+  isCorrect      Boolean
+  answeredAt     DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz           DailyQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, quizId])
+}
+
+model Territory {
+  id          String             @id @default(cuid())
+  teamCode    String             @unique  // 3-letter code like "ARG", "BRA"
+  claimedById String?
+  claimedAt   DateTime?
+  createdAt   DateTime           @default(now())
+
+  claimedBy   User?              @relation(fields: [claimedById], references: [id], onDelete: SetNull)
+  members     TerritoryMember[]
+}
+
+model TerritoryMember {
+  id          String   @id @default(cuid())
+  territoryId String
+  userId      String
+  joinedAt    DateTime @default(now())
+
+  territory   Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([territoryId, userId])
+  @@index([userId])
+}
+
+model TerritorySection {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  slug         String   @unique
+  icon         String?
+  category     String?
+  rules        String?
+  status       String   @default("pending") // pending | approved | rejected | banned
+
+  ownerId      String
+  owner        User     @relation("SectionOwner", fields: [ownerId], references: [id])
+
+  approvedById String?
+  approvedAt   DateTime?
+  rejectReason String?
+  approvedBy   User?    @relation("SectionApprover", fields: [approvedById], references: [id])
+
+  creationCost Int      @default(100)
+
+  memberCount  Int      @default(0)
+  postCount    Int      @default(0)
+
+  createdAt    DateTime @default(now())
+
+  members      TerritorySectionMember[]
+  posts        Post[]
+
+  @@index([status])
+  @@index([category])
+  @@index([slug])
+}
+
+model TerritorySectionMember {
+  id        String   @id @default(cuid())
+  sectionId String
+  userId    String
+  role      String   @default("member") // member | moderator
+  joinedAt  DateTime @default(now())
+
+  section   TerritorySection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, userId])
+  @@index([userId])
+}
+
+model LiveMatch {
+  id         String   @id
+  homeTeam   String
+  awayTeam   String
+  homeScore  Int      @default(0)
+  awayScore  Int      @default(0)
+  status     String   @default("scheduled") // 'scheduled' | 'live' | 'ht' | 'finished'
+  minute     String?  // e.g., "45+2", "HT", "FT"
+  round      String   @default("Group Stage")
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@unique([homeTeam, awayTeam])
 }

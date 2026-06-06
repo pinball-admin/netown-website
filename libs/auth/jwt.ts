@@ -8,6 +8,7 @@ export interface JWTPayload {
   email: string
   name: string
   region: string
+  role: string
 }
 
 export interface User {
@@ -15,6 +16,7 @@ export interface User {
   email: string
   name: string
   region: string
+  role: string
 }
 
 export function generateToken(user: User) {
@@ -24,6 +26,7 @@ export function generateToken(user: User) {
       email: user.email,
       name: user.name,
       region: user.region,
+      role: user.role,
     },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }

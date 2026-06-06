@@ -9,6 +9,7 @@ import DynamicAdBanner from '@/components/football/DynamicAdBanner'
 import MasterUpgradeWidget from '@/components/football/MasterUpgradeWidget'
 import FootballTopBar from '@/components/football/FootballTopBar'
 import MobileBottomNav from '@/components/football/MobileBottomNav'
+import PageTransition from '@/components/ui/PageTransition'
 
 // Pure football images only!
 const FOOTBALL_IMAGES = [
@@ -294,6 +295,7 @@ export default function ForumPage() {
 
   return (
     <>
+      <PageTransition>
       <div className="relative min-h-screen bg-[#030712] text-slate-50 overflow-x-hidden pb-16 md:pb-0">
       {/* Compliance Notice */}
       <ComplianceNotice />
@@ -624,6 +626,7 @@ export default function ForumPage() {
         </div>
       )}
     </div>
+    </PageTransition>
     <MobileBottomNav />
     </>
   )

@@ -71,6 +71,14 @@ export default function HomePage() {
             {isLoggedIn && user ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-400">Hi, {user.name}</span>
+                {user.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    className="px-3 py-1.5 text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-500/30 transition-all"
+                  >
+                    管理
+                  </Link>
+                )}
                 <button
                   onClick={logout}
                   className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors"

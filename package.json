@@ -12,7 +12,10 @@
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
-    "vercel-build": "bash scripts/vercel-build.sh"
+    "vercel-build": "bash scripts/vercel-build.sh",
+    "seed-territories": "tsx scripts/seed-territories.ts",
+    "seed-livescores": "tsx scripts/seed-livescores.ts",
+    "scraper:livescores": "tsx -e \"const { refreshLiveScores } = require('./libs/services/livescore-scraper'); refreshLiveScores().then(console.log).catch(console.error)\""
   },
   "dependencies": {
     "@libsql/client": "^0.17.3",
@@ -33,6 +36,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "resend": "^6.12.4",
+    "swr": "^2.4.1",
     "ws": "^8.21.0"
   },
   "devDependencies": {

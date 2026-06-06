@@ -146,8 +146,8 @@ export class DixonColesModel {
     }
 
     // Calculate attack/defense strengths from data
-    for (const [teamId, teamMatchList] of teamMatches) {
-      const sorted = teamMatchList.sort((a, b) => 
+    for (const [teamId, teamMatchList] of Array.from(teamMatches.entries())) {
+      const sorted = (teamMatchList as HistoricalMatch[]).sort((a: HistoricalMatch, b: HistoricalMatch) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       )
 

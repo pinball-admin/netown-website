@@ -2,25 +2,11 @@ import { Metadata } from 'next'
 import DynamicAdBanner from '@/components/football/DynamicAdBanner'
 import TeamNav from '@/components/football/TeamNav'
 import Translate from '@/components/football/Translate'
+import { TeamJsonLd } from '@/components/JsonLd'
+import { teamsData, TeamData } from '@/libs/data/teams-data'
 
 interface PageProps {
   params: { id: string }
-}
-
-interface TeamData {
-  name: string
-  flag: string
-  code: string
-  ranking: number
-  coach: string
-  coachNationality: string
-  keyPlayers: { name: string; number: number; position: string }[]
-  squad: { name: string; number: number; position: string; club: string }[]
-  worldCupTitles: number
-  bestResult: string
-  group: string
-  fixtures: { opponent: string; date: string; time: string; venue: string }[]
-  aiAnalysis: { persona: string; alias: string; initials: string; gradient: string; winProbability: number; analysis: string }[]
 }
 
 const defaultTeam = (id: string): TeamData => ({
@@ -40,210 +26,6 @@ const defaultTeam = (id: string): TeamData => ({
     { persona: 'zidane_gao', alias: 'Zidane Gao', initials: 'ZG', gradient: 'from-amber-500 to-orange-600', winProbability: 5, analysis: 'Team data coming soon. Stay tuned for full squad and analysis.' },
   ],
 })
-
-const teamsData: Record<string, {
-  name: string
-  flag: string
-  code: string
-  ranking: number
-  coach: string
-  coachNationality: string
-  keyPlayers: { name: string; number: number; position: string }[]
-  squad: { name: string; number: number; position: string; club: string }[]
-  worldCupTitles: number
-  bestResult: string
-  group: string
-  fixtures: { opponent: string; date: string; time: string; venue: string }[]
-  aiAnalysis: { persona: string; alias: string; initials: string; gradient: string; winProbability: number; analysis: string }[]
-}> = {
-  'argentina': {
-    name: 'Argentina',
-    flag: '🇦🇷',
-    code: 'ARG',
-    ranking: 1,
-    coach: 'Lionel Scaloni',
-    coachNationality: 'Argentine',
-    keyPlayers: [
-      { name: 'Lionel Messi', number: 10, position: 'Forward' },
-      { name: 'Angel Di Maria', number: 11, position: 'Winger' },
-      { name: 'Emiliano Martinez', number: 23, position: 'Goalkeeper' },
-    ],
-    squad: [
-      { name: 'Lionel Messi', number: 10, position: 'Forward', club: 'Inter Miami' },
-      { name: 'Angel Di Maria', number: 11, position: 'Winger', club: 'Benfica' },
-      { name: 'Emiliano Martinez', number: 23, position: 'Goalkeeper', club: 'Aston Villa' },
-      { name: 'Cristian Romero', number: 13, position: 'Defender', club: 'Tottenham' },
-      { name: 'Nicolas Otamendi', number: 19, position: 'Defender', club: 'Benfica' },
-      { name: 'Leandro Paredes', number: 5, position: 'Midfielder', club: 'Juventus' },
-      { name: 'Rodrigo De Paul', number: 7, position: 'Midfielder', club: 'Atletico Madrid' },
-      { name: 'Julian Alvarez', number: 9, position: 'Forward', club: 'Manchester City' },
-    ],
-    worldCupTitles: 3,
-    bestResult: 'Champion (1978, 1986, 2022)',
-    group: 'Group C',
-    fixtures: [
-      { opponent: 'Saudi Arabia', date: '2026-06-12', time: '15:00', venue: 'MetLife Stadium, NY' },
-      { opponent: 'Mexico', date: '2026-06-17', time: '21:00', venue: 'SoFi Stadium, LA' },
-    ],
-    aiAnalysis: [
-      { persona: 'zidane_gao', alias: 'Zidane Gao', initials: 'ZG', gradient: 'from-amber-500 to-orange-600', winProbability: 18, analysis: 'Neural network shows 18% defense retention probability. Messis final dance could end in glory.' },
-      { persona: 'beckham_chen', alias: 'Beckham Chen', initials: 'BC', gradient: 'from-blue-500 to-purple-600', winProbability: 22, analysis: 'Bayesian model favors Argentina. Wing attack efficiency combined with squad depth is unmatched.' },
-      { persona: 'batistuta_zhang', alias: 'Batistuta Zhang', initials: 'BZ', gradient: 'from-red-500 to-rose-600', winProbability: 20, analysis: 'Violent aesthetics index high. Aggressive pressing game suits this squad perfectly.' },
-    ],
-  },
-  'brazil': {
-    name: 'Brazil',
-    flag: '🇧🇷',
-    code: 'BRA',
-    ranking: 3,
-    coach: 'Dorival Jr.',
-    coachNationality: 'Brazilian',
-    keyPlayers: [
-      { name: 'Neymar Jr.', number: 10, position: 'Forward' },
-      { name: 'Vinicius Jr.', number: 7, position: 'Winger' },
-      { name: 'Rodri', number: 5, position: 'Midfielder' },
-    ],
-    squad: [
-      { name: 'Neymar Jr.', number: 10, position: 'Forward', club: 'Al-Hilal' },
-      { name: 'Vinicius Jr.', number: 7, position: 'Winger', club: 'Real Madrid' },
-      { name: 'Rodri', number: 5, position: 'Midfielder', club: 'Manchester City' },
-      { name: 'Alisson Becker', number: 1, position: 'Goalkeeper', club: 'Liverpool' },
-      { name: 'Marquinhos', number: 4, position: 'Defender', club: 'PSG' },
-    ],
-    worldCupTitles: 5,
-    bestResult: 'Champion (1958, 1962, 1970, 1994, 2002)',
-    group: 'Group G',
-    fixtures: [
-      { opponent: 'Serbia', date: '2026-06-14', time: '18:00', venue: 'Rose Bowl, Pasadena' },
-      { opponent: 'Switzerland', date: '2026-06-19', time: '20:00', venue: 'AT&T Stadium, Dallas' },
-    ],
-    aiAnalysis: [
-      { persona: 'batistuta_zhang', alias: 'Batistuta Zhang', initials: 'BZ', gradient: 'from-red-500 to-rose-600', winProbability: 24, analysis: 'Highest xG shooting rate in South America. Neymar finally lifts the trophy.' },
-      { persona: 'ronaldo_silva', alias: 'Ronaldo Silva', initials: 'RS', gradient: 'from-yellow-500 to-amber-600', winProbability: 21, analysis: 'Samba explosiveness peak. 1v1 success rate is devastating.' },
-    ],
-  },
-  'france': {
-    name: 'France',
-    flag: '🇫🇷',
-    code: 'FRA',
-    ranking: 2,
-    coach: 'Didier Deschamps',
-    coachNationality: 'French',
-    keyPlayers: [
-      { name: 'Kylian Mbappe', number: 10, position: 'Forward' },
-      { name: 'Antoine Griezmann', number: 7, position: 'Forward' },
-      { name: 'N Golo Kante', number: 6, position: 'Midfielder' },
-    ],
-    squad: [
-      { name: 'Kylian Mbappe', number: 10, position: 'Forward', club: 'Real Madrid' },
-      { name: 'Antoine Griezmann', number: 7, position: 'Forward', club: 'Atletico Madrid' },
-      { name: 'N Golo Kante', number: 6, position: 'Midfielder', club: 'Al-Ettifaq' },
-      { name: 'Hugo Lloris', number: 1, position: 'Goalkeeper', club: 'Retired' },
-      { name: 'William Saliba', number: 4, position: 'Defender', club: 'Arsenal' },
-    ],
-    worldCupTitles: 2,
-    bestResult: 'Champion (1998, 2018)',
-    group: 'Group D',
-    fixtures: [
-      { opponent: 'Australia', date: '2026-06-13', time: '15:00', venue: 'Lamar Hunt US Bank Stadium' },
-      { opponent: 'Germany', date: '2026-06-18', time: '21:00', venue: 'Mercedes-Benz Stadium' },
-    ],
-    aiAnalysis: [
-      { persona: 'beckham_chen', alias: 'Beckham Chen', initials: 'BC', gradient: 'from-blue-500 to-purple-600', winProbability: 20, analysis: 'Wing cross efficiency through Mbappe is devastating. Premier League style tactics.' },
-      { persona: 'zidane_gao', alias: 'Zidane Gao', initials: 'ZG', gradient: 'from-amber-500 to-orange-600', winProbability: 19, analysis: 'Midfield control with Kante return makes them favorites for deep knockout runs.' },
-    ],
-  },
-  'england': {
-    name: 'England',
-    flag: '🏴',
-    code: 'ENG',
-    ranking: 5,
-    coach: 'Gareth Southgate',
-    coachNationality: 'English',
-    keyPlayers: [
-      { name: 'Harry Kane', number: 9, position: 'Striker' },
-      { name: 'Declan Rice', number: 6, position: 'Midfielder' },
-      { name: 'Phil Foden', number: 8, position: 'Midfielder' },
-    ],
-    squad: [
-      { name: 'Harry Kane', number: 9, position: 'Striker', club: 'Bayern Munich' },
-      { name: 'Declan Rice', number: 6, position: 'Midfielder', club: 'Arsenal' },
-      { name: 'Phil Foden', number: 8, position: 'Midfielder', club: 'Manchester City' },
-      { name: 'Bukayo Saka', number: 7, position: 'Winger', club: 'Arsenal' },
-    ],
-    worldCupTitles: 1,
-    bestResult: 'Champion (1966)',
-    group: 'Group B',
-    fixtures: [
-      { opponent: 'Iran', date: '2026-06-13', time: '18:00', venue: 'Levi Stadium, Santa Clara' },
-      { opponent: 'USA', date: '2026-06-20', time: '20:00', venue: 'MetLife Stadium, NY' },
-    ],
-    aiAnalysis: [
-      { persona: 'shearer_zhang', alias: 'Shearer Zhang', initials: 'SZ', gradient: 'from-green-500 to-emerald-600', winProbability: 15, analysis: 'Penalty box domination through Kane is their key weapon. Physical battle advantage.' },
-      { persona: 'beckham_chen', alias: 'Beckham Chen', initials: 'BC', gradient: 'from-blue-500 to-purple-600', winProbability: 14, analysis: 'Premier League discipline gives them edge in tight knockout matches.' },
-    ],
-  },
-  'usa': {
-    name: 'USA',
-    flag: '🇺🇸',
-    code: 'USA',
-    ranking: 11,
-    coach: 'Gregg Berhalter',
-    coachNationality: 'American',
-    keyPlayers: [
-      { name: 'Christian Pulisic', number: 10, position: 'Winger' },
-      { name: 'Gio Reyna', number: 7, position: 'Midfielder' },
-      { name: 'Weston McKennie', number: 8, position: 'Midfielder' },
-    ],
-    squad: [
-      { name: 'Christian Pulisic', number: 10, position: 'Winger', club: 'AC Milan' },
-      { name: 'Gio Reyna', number: 7, position: 'Midfielder', club: 'Borussia Dortmund' },
-      { name: 'Weston McKennie', number: 8, position: 'Midfielder', club: 'Juventus' },
-      { name: 'Matt Turner', number: 1, position: 'Goalkeeper', club: 'Nottingham Forest' },
-    ],
-    worldCupTitles: 0,
-    bestResult: 'Quarter-finals (2002)',
-    group: 'Group A',
-    fixtures: [
-      { opponent: 'Morocco', date: '2026-06-11', time: '20:00', venue: 'SoFi Stadium, LA' },
-      { opponent: 'Croatia', date: '2026-06-16', time: '21:00', venue: 'AT&T Stadium, Dallas' },
-    ],
-    aiAnalysis: [
-      { persona: 'ronaldo_silva', alias: 'Ronaldo Silva', initials: 'RS', gradient: 'from-yellow-500 to-amber-600', winProbability: 12, analysis: 'Home soil advantage plus explosive 1v1 skills. Dark horse potential.' },
-      { persona: 'zidane_gao', alias: 'Zidane Gao', initials: 'ZG', gradient: 'from-amber-500 to-orange-600', winProbability: 10, analysis: 'Young squad with high neural network learning potential. Could surprise.' },
-    ],
-  },
-  'germany': {
-    name: 'Germany',
-    flag: '🇩🇪',
-    code: 'GER',
-    ranking: 16,
-    coach: 'Julian Nagelsmann',
-    coachNationality: 'German',
-    keyPlayers: [
-      { name: 'Manuel Neuer', number: 1, position: 'Goalkeeper' },
-      { name: 'Toni Kroos', number: 8, position: 'Midfielder' },
-      { name: 'Kai Havertz', number: 10, position: 'Forward' },
-    ],
-    squad: [
-      { name: 'Manuel Neuer', number: 1, position: 'Goalkeeper', club: 'Bayern Munich' },
-      { name: 'Toni Kroos', number: 8, position: 'Midfielder', club: 'Real Madrid' },
-      { name: 'Kai Havertz', number: 10, position: 'Forward', club: 'Arsenal' },
-      { name: 'Jamal Musiala', number: 14, position: 'Midfielder', club: 'Bayern Munich' },
-    ],
-    worldCupTitles: 4,
-    bestResult: 'Champion (1954, 1974, 1990, 2014)',
-    group: 'Group E',
-    fixtures: [
-      { opponent: 'Japan', date: '2026-06-13', time: '20:00', venue: 'Lincoln Financial Field' },
-      { opponent: 'Spain', date: '2026-06-19', time: '18:00', venue: 'NRG Stadium, Houston' },
-    ],
-    aiAnalysis: [
-      { persona: 'shearer_zhang', alias: 'Shearer Zhang', initials: 'SZ', gradient: 'from-green-500 to-emerald-600', winProbability: 16, analysis: 'Young squad under Nagelsmann tactical genius. Traditional striker system revitalized.' },
-      { persona: 'batistuta_zhang', alias: 'Batistuta Zhang', initials: 'BZ', gradient: 'from-red-500 to-rose-600', winProbability: 14, analysis: 'High score game potential. German efficiency meets modern pressing.' },
-    ],
-  },
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const team = teamsData[params.id] || defaultTeam(params.id)
@@ -435,6 +217,12 @@ export default function TeamPage({ params }: PageProps) {
           </div>
         </div>
       </main>
+
+      <TeamJsonLd
+        name={`${team.name} National Football Team`}
+        description={`Complete profile of ${team.name} for World Cup 2026. View squad, stats, fixtures, and AI predictions. FIFA ranking #${team.ranking}.`}
+        url={`https://football.netown.cn/football/teams/${params.id}`}
+      />
 
       {/* Footer */}
       <footer className="border-t border-slate-800/50 py-5 mt-8">

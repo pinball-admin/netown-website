@@ -14,6 +14,7 @@ next-env.d.ts
 # IDE
 .vscode/
 .idea/
+.qoder/
 *.swp
 *.swo
 
@@ -29,8 +30,11 @@ Thumbs.db
 # Logs
 logs/
 *.log
+# Database
 *.db
 *.db-journal
+*.db.backup
+*.backup
 /app/generated/prisma
 .vercel
 .vercel-tmp/

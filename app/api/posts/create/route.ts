@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { verifyToken } from '@/libs/auth/jwt'
 import { prisma } from '@/libs/prisma/client'
+import { translatePost } from '@/libs/services/translate'
+import { SUPPORTED_LANGUAGES } from '@/libs/services/translate'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,11 +47,27 @@ export async function POST(request: Request) {
       )
     }
 
+    // Auto-translate content to all supported languages
+    let translations: Record<string, string> = {}
+    let sourceLanguage = 'en'
+    try {
+      const result = await translatePost(content.trim())
+      translations = result.translations
+      sourceLanguage = result.detectedLanguage
+      console.log(`[POSTS] Auto-translated post from ${sourceLanguage} to ${Object.keys(translations).length} languages`)
+    } catch (translationError) {
+      console.warn('[POSTS] Translation failed, storing original only:', translationError)
+      // Store original content for all languages
+      translations = Object.fromEntries(SUPPORTED_LANGUAGES.map(l => [l, content.trim()]))
+    }
+
     const post = await prisma.post.create({
       data: {
         userId: user.id,
         content: content.trim(),
         imageUrl: imageUrl || null,
+        sourceLanguage,
+        translations: JSON.stringify(translations),
       },
       include: {
         user: true,
@@ -60,13 +78,15 @@ export async function POST(request: Request) {
       success: true,
       post: {
         id: post.id,
-        author: post.user.name,
+        author: (post as any).user?.name || 'Unknown',
         avatar: '⚽',
         country: '🌍',
         content: post.content,
+        sourceLanguage: post.sourceLanguage,
+        translations: post.translations,
         imageUrl: post.imageUrl,
         likes: post.likes,
-        comments: post.comments,
+        comments: (post as any).comments?.length || 0,
         time: 'Just now',
         createdAt: post.createdAt,
       },

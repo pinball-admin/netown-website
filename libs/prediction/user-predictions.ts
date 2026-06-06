@@ -12,6 +12,7 @@ export interface UserPredictionResult {
   matchId: string
   predictionType: string
   prediction: string
+  reasoning: string | null
   difficulty: string
   isCorrect: boolean | null
   pointsAwarded: number
@@ -33,7 +34,8 @@ export async function createPrediction(
   userId: string,
   matchId: string,
   type: PredictionType,
-  prediction: string
+  prediction: string,
+  reasoning?: string
 ): Promise<UserPredictionResult> {
   // Check if user already predicted this match+type
   const existing = await prisma.userPrediction.findFirst({
@@ -54,6 +56,7 @@ export async function createPrediction(
       matchId,
       predictionType: type,
       prediction,
+      reasoning: reasoning || null,
       difficulty: DIFFICULTY_MAP[type] || 'easy',
       isCorrect: null,
       pointsAwarded: 0,
@@ -239,6 +242,7 @@ function mapPrediction(p: any): UserPredictionResult {
     matchId: p.matchId,
     predictionType: p.predictionType,
     prediction: p.prediction,
+    reasoning: p.reasoning ?? null,
     difficulty: p.difficulty,
     isCorrect: p.isCorrect,
     pointsAwarded: p.pointsAwarded,

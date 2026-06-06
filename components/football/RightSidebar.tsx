@@ -4,12 +4,18 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
+import { useUserStats } from '@/libs/data/swr-hooks'
 import CandyPoints from '@/components/football/CandyPoints'
 import MasterUpgradeWidget from '@/components/football/MasterUpgradeWidget'
 import FansShop from '@/components/football/FansShop'
 import GamersCorner from '@/components/football/GamersCorner'
 import AdSenseAd from '@/components/football/AdSenseAd'
 import LeaderboardWidget from '@/components/football/LeaderboardWidget'
+import TerritorySidebarWidget from '@/components/football/TerritorySidebarWidget'
+import FriendComparison from '@/components/football/FriendComparison'
+import PersonalStatsDashboard from '@/components/football/PersonalStatsDashboard'
+import SettlementHistory from '@/components/football/SettlementHistory'
+import { SkeletonCard } from '@/components/ui/Skeleton'
 
 interface HotPost {
   id: number
@@ -30,14 +36,40 @@ const hotPosts: HotPost[] = [
 ]
 
 export default function RightSidebar() {
-  const { isLoggedIn } = useAuth()
+  const { user, isLoggedIn } = useAuth()
   const { t } = useI18n()
   const [expandedSection, setExpandedSection] = useState<'hotPosts' | 'leaderboard'>('hotPosts')
+
+  // Fetch user stats via SWR (auto-revalidates, handles loading/error)
+  const { data: statsData, isLoading: statsLoading } = useUserStats()
+  const userStats = statsData?.success ? statsData.stats : null
 
   return (
     <div className="space-y-6">
       {/* Candy Points */}
       <CandyPoints />
+
+      {/* AdSense - Between Candy & Stats */}
+      <AdSenseAd adSlot="1234567894" adFormat="rectangle" className="rounded-xl overflow-hidden" />
+
+      {/* Personal Stats Dashboard (logged in users) */}
+      {isLoggedIn && (
+        <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
+          <h2 className="text-lg font-semibold text-slate-300 mb-4 flex items-center gap-2">
+            📊 {t('stats.personalStats')}
+          </h2>
+          {statsLoading ? (
+            <SkeletonCard />
+          ) : userStats ? (
+            <PersonalStatsDashboard stats={userStats} />
+          ) : (
+            <div className="text-sm text-slate-500 text-center py-4">
+              {t('stats.noData')}
+            </div>
+          )}
+        </div>
+      )}
+      <SettlementHistory />
 
       {/* Hot Posts */}
       <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/60 rounded-xl p-5 shadow-xl">
@@ -95,10 +127,14 @@ export default function RightSidebar() {
         </div>
       </div>
 
+      <TerritorySidebarWidget />
+
       <MasterUpgradeWidget />
 
+      <FriendComparison />
+
       {/* Google AdSense - Sidebar Ad Unit */}
-      <AdSenseAd adSlot="" adFormat="rectangle" className="rounded-xl overflow-hidden" />
+      <AdSenseAd adSlot="1234567893" adFormat="rectangle" className="rounded-xl overflow-hidden" />
 
       {/* Nike/Adidas Affiliate Ad */}
       <a

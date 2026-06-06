@@ -6,13 +6,21 @@ interface User {
   id: string
   email: string
   name: string
+  displayName?: string
+  bio?: string
+  avatarUrl?: string
+  preferredLanguage?: string
   region: string
   role: string
   candyBalance: number
   totalPredictions: number
   correctPredictions: number
+  currentStreak: number
+  longestStreak: number
+  lastLoginDate?: string
   isVerified: boolean
   predictionUnlockUntil: string | null
+  createdAt?: string
 }
 
 interface AuthContextType {
